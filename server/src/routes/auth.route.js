@@ -2,7 +2,7 @@ import express from "express";
 import checkAuth from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validateInputs.js";
 import { loginValidations, signupValidations } from "../validator/authSchema.js";
-import { deleteAccount, login, logout, sendOTP, signup, verifyOTP } from "../controllers/auth.Controller.js";
+import { deleteAccount, login, logout, sendOTP, signup, verifyOTP } from "../controllers/auth.controller.js";
 
 const router = express.Router();
 
