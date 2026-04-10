@@ -1,18 +1,21 @@
-import { X, Search, UserPlus, Info, CheckCircle2, Loader2 } from "lucide-react";
-import { useChat } from "../../../../hooks/chatAuth";
-import { useState } from "react";
-import { showToast } from "../../../../utils/toast";
+import {X, Search, UserPlus, Info, CheckCircle2, Loader2} from "lucide-react";
+import {useChat} from "../../../../hooks/chatAuth";
+import {useContext, useState} from "react";
+import {showToast} from "../../../../utils/toast";
+import {ChatContext} from "../../../../context/ChatContext";
 
 const NewChatModal = ({
   setIsNewChatModalOpen,
 }: {
   setIsNewChatModalOpen: (open: boolean) => void;
 }) => {
-  const { searchUser, loading, createConversation } = useChat();
+  const {searchUser, loading, createConversation} = useChat();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchUserResults, setSearchUserResults] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>("");
+
+  const {getConversations} = useContext(ChatContext);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -25,10 +28,10 @@ const NewChatModal = ({
     }
     const results = await searchUser(query);
     if (!results?.success) {
-        setSearchUserResults([]);
+      setSearchUserResults([]);
     } else {
       setSearchUserResults(
-        (Array.isArray(results.users) ? results.users : [results.user]) || []
+        (Array.isArray(results.users) ? results.users : [results.user]) || [],
       );
     }
   };
@@ -42,6 +45,7 @@ const NewChatModal = ({
     if (response.success) {
       setIsNewChatModalOpen(false);
       showToast.success(response.message);
+      getConversations(); // Refresh conversations list
     }
   };
 
@@ -122,7 +126,10 @@ const NewChatModal = ({
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center font-black text-indigo-600 text-lg border-2 border-white shadow-sm overflow-hidden">
-                         <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="" />
+                        <img
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                          alt=""
+                        />
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-extrabold text-slate-800 text-[15px] truncate">
@@ -135,7 +142,10 @@ const NewChatModal = ({
                     </div>
                     <div className="flex items-center justify-center">
                       {selectedUser === user._id ? (
-                        <CheckCircle2 size={24} className="text-indigo-600 fill-indigo-50" />
+                        <CheckCircle2
+                          size={24}
+                          className="text-indigo-600 fill-indigo-50"
+                        />
                       ) : (
                         <div className="w-6 h-6 rounded-full border-2 border-slate-100 group-hover:border-indigo-200 transition-colors" />
                       )}
@@ -146,11 +156,11 @@ const NewChatModal = ({
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-3">
-                    <UserPlus size={20} className="text-slate-300" />
+                  <UserPlus size={20} className="text-slate-300" />
                 </div>
                 <p className="text-[12px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">
-                  {searchQuery.length < 3 
-                    ? "Type to discover\nnew friends" 
+                  {searchQuery.length < 3
+                    ? "Type to discover\nnew friends"
                     : `No results for\n"${searchQuery}"`}
                 </p>
               </div>
