@@ -17,7 +17,7 @@ export default function SocketProvider({ children }: { children: React.ReactNode
 
     useEffect(() => {
         if (user) {
-            const newSocket = io("http://localhost:9999", {
+            const newSocket = io(import.meta.env.VITE_SERVER_URL, {
                 query: { userId: user._id },
                 withCredentials: true,
             });
