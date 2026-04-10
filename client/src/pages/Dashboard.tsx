@@ -1,10 +1,16 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import ChatList from "../components/dashboard/chat/chat-list/ChatList";
 import ChatWindow from "../components/dashboard/chat/chat-window/ChatWindow";
 import NewChatModal from "../components/dashboard/chat/chatModel/NewChatModal";
+import {useAuth} from "../hooks/useAuth";
 
 const Dashboard = () => {
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+  const {checkAuthentication} = useAuth();
+
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
 
   return (
     <div className="flex h-full w-full bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-white">
