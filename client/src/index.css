@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/* index.css mein ye add karein */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+}

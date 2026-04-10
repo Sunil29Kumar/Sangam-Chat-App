@@ -1,0 +1,48 @@
+import { createContext, useContext, useEffect, useState } from "react";
+import { AuthContext } from "./AuthContext";
+import { io, Socket } from "socket.io-client";
+
+interface socketContextType {
+    socket: Socket | null;
+    onlineUsers: string[];
+}
+
+export const socketContext = createContext<socketContextType | null>(null);
+
+export default function SocketProvider({ children }: { children: React.ReactNode }) {
+    
+    const { user } = useContext(AuthContext);
+    const [socket, setSocket] = useState<Socket | null>(null);
+    const [onlineUsers, setOnlineUsers] = useState([]);
+
+    useEffect(() => {
+        if (user) {
+            const newSocket = io("http://localhost:9999", {
+                query: { userId: user._id },
+                withCredentials: true,
+            });
+
+            setSocket(newSocket);
+
+            // Online users track karne ke liye (Backend se aayega)
+            newSocket.on("get_online_users", (users) => {
+                setOnlineUsers(users);
+            });
+
+            return () => {
+                newSocket.close(); // Clean up on logout
+            };
+        } else {
+            if (socket) {
+                socket.close();
+                setSocket(null);
+            }
+        }
+    }, [user]);
+
+    return (
+        <socketContext.Provider value={{ socket, onlineUsers }}>
+            {children}
+        </socketContext.Provider>
+    );
+}
