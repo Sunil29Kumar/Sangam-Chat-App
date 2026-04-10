@@ -24,6 +24,8 @@ app.use(cookieParser(process.env.COOKIE_KEY));
 app.use(cors({
     origin: process.env.CLIENT_URL,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 const server = createServer(app);
