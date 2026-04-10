@@ -94,11 +94,8 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log(email, password);
         
         const user = await User.findOne({ email });
-
-        
 
         if (!user) {
             return res.status(400).json({ success: false, error: "User does not exist" });
@@ -114,7 +111,7 @@ export const login = async (req, res) => {
         const duration = 1000 * 60 * 60 * 24 * 7; // 7 days in ms
         const expiresAt = new Date(Date.now() + duration); // CURRENT time + duration
 
-        res.cookie("sid", sessionId, {
+        res.cookies("sid", sessionId, {
             httpOnly: true,
             signed: true,
             maxAge: duration,
