@@ -111,7 +111,7 @@ export const login = async (req, res) => {
         const duration = 1000 * 60 * 60 * 24 * 7; // 7 days in ms
         const expiresAt = new Date(Date.now() + duration); // CURRENT time + duration
 
-        res.cookies("sid", sessionId, {
+        res.cookie("sid", sessionId, {
             httpOnly: true,
             signed: true,
             maxAge: duration,
