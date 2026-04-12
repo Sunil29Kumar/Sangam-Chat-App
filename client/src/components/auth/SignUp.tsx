@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import {
   User,
   Mail,
@@ -10,21 +10,19 @@ import {
   EyeOff,
   ChevronLeft,
   Loader2,
+  CheckCircle2
 } from "lucide-react";
-import {useAuth} from "../../hooks/useAuth";
-import {useNavigate} from "react-router-dom";
-import {showToast} from "../../utils/toast";
+import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { showToast } from "../../utils/toast";
 
 const SignUp = () => {
-  const {signup, sendOTP, verifyOTP} = useAuth();
+  const { signup, sendOTP, verifyOTP } = useAuth();
   const navigate = useNavigate();
 
-  // Step States
   const [isOTPPhase, setIsOTPPhase] = useState(false);
   const [isOTPVerified, setIsOTPVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Form States
   const [showPassword, setShowPassword] = useState(false);
   const [isPasswordMatching, setIsPasswordMatching] = useState(false);
   const [otp, setOTP] = useState("");
@@ -42,43 +40,32 @@ const SignUp = () => {
     confirmPassword: "",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {name, value} = e.target;
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prev) => {
-      const newFormData = {...prev, [name]: value};
+      const newFormData = { ...prev, [name]: value }; 
       setIsPasswordMatching(
         newFormData.password.length > 0 &&
-          newFormData.password === newFormData.confirmPassword,
+          newFormData.password === newFormData.confirmPassword
       );
       return newFormData;
     });
+    // Clear error when user types
+    if (inputErrors[name]) setInputErrors({ ...inputErrors, [name]: "" });
   };
 
-  // Phase 1: Get OTP
   const handleGetOTP = async () => {
     setIsLoading(true);
     try {
-      const response = await sendOTP( formData.name, formData.email, formData.password);
+      const response = await sendOTP(formData.name, formData.email, formData.password);
       if (response?.success) {
         setIsOTPPhase(true);
-        showToast.success(response?.message || "OTP sent to your email!");
+        showToast.success("OTP sent to your email!");
       } else {
-        if (Object(response?.error)) {
-          console.log(response.error);
-          
-          const errors = response?.error;
-          console.log(errors);
-          
-
-          setInputErrors((prev) => ({
-            ...prev,
-            name: errors?.name || "",
-            email: errors?.email || "",
-            password: errors?.password || "",
-            confirmPassword: errors?.confirmPassword || "",
-          }));
+        if (response?.error && typeof response.error === 'object') {
+          setInputErrors(response.error);
         } else {
-          showToast.error(response?.error || "Failed to send OTP. Try again.");
+          showToast.error(response?.error || "Failed to send OTP.");
         }
       }
     } finally {
@@ -86,37 +73,31 @@ const SignUp = () => {
     }
   };
 
-  // Phase 2: Verify OTP
   const handleVerifyOTP = async () => {
     setIsLoading(true);
     try {
       const response = await verifyOTP(formData.email, otp);
       if (response?.success) {
         setIsOTPVerified(true);
-        showToast.success(response?.message || "OTP verified successfully!");
+        showToast.success("Email verified!");
       } else {
-        showToast.error(response?.error || "OTP verification failed.");
+        showToast.error(response?.error || "Invalid OTP.");
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Phase 3: Create Account
-  const handleCreateAccount = async (e: React.FormEvent) => {
+  const handleCreateAccount = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await signup(
-        formData.name,
-        formData.email,
-        formData.password,
-      );
+      const response = await signup(formData.name, formData.email, formData.password);
       if (response?.success) {
+        showToast.success("Welcome to Sangam!");
         navigate("/login");
-        showToast.success(response?.message || "Account created successfully!");
       } else {
-        showToast.error(response?.error || "Account creation failed.");
+        showToast.error(response?.error || "Creation failed.");
       }
     } finally {
       setIsLoading(false);
@@ -124,190 +105,188 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden border border-white">
-        {/* Left Branding */}
-        <div className="hidden md:flex w-2/5 bg-indigo-600 p-12 flex-col justify-between text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6 relative overflow-hidden font-sans">
+      {/* Background Orbs */}
+      <div className="absolute top-[-5%] right-[-5%] w-[35%] h-[35%] bg-indigo-100/60 rounded-full blur-[100px]" />
+      <div className="absolute bottom-[-5%] left-[-5%] w-[35%] h-[35%] bg-blue-100/60 rounded-full blur-[100px]" />
+
+      <div className="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.04)] flex flex-col md:flex-row overflow-hidden border border-white relative z-10">
+        
+        {/* Left Branding Panel */}
+        <div className="hidden md:flex w-5/12 bg-gradient-to-br from-indigo-600 to-indigo-800 p-12 flex-col justify-between text-white relative">
           <div className="relative z-10">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-lg rounded-xl flex items-center justify-center mb-6">
-              <MessageSquare size={24} />
+            <div className="w-14 h-14 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-10 border border-white/20 shadow-lg">
+              <MessageSquare size={28} />
             </div>
-            <h2 className="text-3xl font-bold">
-              Join the <br /> Sangam Community
+            <h2 className="text-4xl font-extrabold leading-tight">
+              Start your <br /> journey with <br /> 
+              <span className="text-indigo-200">Sangam.</span>
             </h2>
+            <div className="mt-8 space-y-4">
+               {[
+                 "Real-time messaging",
+                 "End-to-end encryption",
+                 "Community driven"
+               ].map((text, i) => (
+                 <div key={i} className="flex items-center gap-3 text-indigo-100/90 text-sm font-medium">
+                   <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center">
+                     <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                   </div>
+                   {text}
+                 </div>
+               ))}
+            </div>
           </div>
-          <div className="relative z-10 text-sm text-indigo-200">
-            © 2024 Sangam Chat Inc.
+          <div className="relative z-10 opacity-60 text-xs font-medium tracking-widest">
+            © 2026 SANGAM CHAT INC.
           </div>
-          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-500 rounded-full opacity-50"></div>
+          
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-indigo-400 opacity-20 rounded-full blur-3xl"></div>
         </div>
 
         {/* Right Form Section */}
-        <div className="flex-1 p-8 sm:p-12">
-          <div className="mb-8">
-            <h1 className="text-2xl font-black text-slate-900">
-              {isOTPVerified
-                ? "Almost there!"
-                : isOTPPhase
-                  ? "Verify your email"
-                  : "Create your account"}
+        <div className="flex-1 p-8 sm:p-14 lg:p-20">
+          {/* Step Progress Bar */}
+          <div className="flex gap-2 mb-10">
+            <div className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${!isOTPPhase ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.4)]' : 'bg-slate-200'}`} />
+            <div className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${isOTPPhase && !isOTPVerified ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.4)]' : isOTPVerified ? 'bg-indigo-600' : 'bg-slate-200'}`} />
+            <div className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${isOTPVerified ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.4)]' : 'bg-slate-200'}`} />
+          </div>
+
+          <div className="mb-10">
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              {isOTPVerified ? "Final Step!" : isOTPPhase ? "Verify Identity" : "Create Account"}
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
-              {isOTPVerified
-                ? "Email verified. Click below to finish."
-                : isOTPPhase
-                  ? "Enter code sent to inbox."
-                  : "Fill in details to start."}
+            <p className="text-slate-500 mt-2 font-medium">
+              {isOTPVerified ? "Your email is verified. Let's get started." : isOTPPhase ? `We've sent a code to your email.` : "Join our secure messaging platform today."}
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {!isOTPPhase && !isOTPVerified && (
-              <>
-                <div className="space-y-1">
-                  <label className="text-[12px] font-bold text-slate-500 uppercase ml-1">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <User
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                      size={18}
-                    />
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
                     <input
                       type="text"
                       name="name"
-                      min={3}
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border rounded-xl outline-none focus:ring-4 focus:ring-indigo-500/5"
+                      placeholder="John Doe"
+                      className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border ${inputErrors.name ? 'border-red-400' : 'border-slate-200'} rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-medium`}
                       value={formData.name}
                       onChange={handleInputChange}
                     />
                   </div>
-                  {inputErrors.name && (
-                    <p className="text-red-500 text-xs mt-1">{inputErrors.name}</p>
-                  )}
+                  {inputErrors.name && <p className="text-red-500 text-[10px] font-bold ml-1">{inputErrors.name}</p>}
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[12px] font-bold text-slate-500 uppercase ml-1">
-                    Email
-                  </label>
-                  <div className="relative">
-                    <Mail
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                      size={18}
-                    />
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
                     <input
                       type="email"
                       name="email"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border rounded-xl outline-none"
+                      placeholder="john@example.com"
+                      className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border ${inputErrors.email ? 'border-red-400' : 'border-slate-200'} rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-medium`}
                       value={formData.email}
                       onChange={handleInputChange}
                     />
                   </div>
-                  {inputErrors.email && (
-                    <p className="text-red-500 text-xs mt-1">{inputErrors.email}</p>
-                  )}
+                  {inputErrors.email && <p className="text-red-500 text-[10px] font-bold ml-1">{inputErrors.email}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <Lock
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                      size={18}
-                    />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      placeholder="Password"
-                      className="w-full pl-11 pr-11 py-3 bg-slate-50 border rounded-xl"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                    />
-                    <button
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                  <div className="space-y-1.5">
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        placeholder="Password"
+                        className={`w-full pl-12 pr-11 py-3.5 bg-slate-50 border ${inputErrors.password ? 'border-red-400' : 'border-slate-200'} rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-medium`}
+                        value={formData.password}
+                        onChange={handleInputChange}
+                      />
+                      <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
-                  {inputErrors.password && (
-                    <p className="text-red-500 text-xs mt-1">{inputErrors.password}</p>
-                  )}
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="Confirm"
-                    className="w-full px-4 py-3 bg-slate-50 border rounded-xl"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                  />
-                  {inputErrors.confirmPassword && (
-                    <p className="text-red-500 text-xs mt-1">{inputErrors.confirmPassword}</p>
-                  )}
+                  <div className="space-y-1.5">
+                    <div className="relative group">
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        placeholder="Confirm"
+                        className={`w-full px-5 py-3.5 bg-slate-50 border ${!isPasswordMatching && formData.confirmPassword ? 'border-red-400' : 'border-slate-200'} rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-medium`}
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                      />
+                      {isPasswordMatching && <CheckCircle2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500" />}
+                    </div>
+                  </div>
                 </div>
-              </>
+              </div>
             )}
 
             {isOTPPhase && !isOTPVerified && (
-              <div className="pt-2 space-y-4">
-                <div className="relative">
-                  <ShieldCheck
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600"
-                    size={20}
-                  />
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100 flex flex-col items-center">
+                  <ShieldCheck className="text-indigo-600 mb-4" size={48} />
                   <input
                     type="text"
+                    maxLength={6}
                     value={otp}
                     onChange={(e) => setOTP(e.target.value)}
-                    placeholder="Enter 6-digit OTP"
-                    className="w-full pl-12 pr-4 py-4 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl outline-none text-xl font-bold tracking-widest text-indigo-900"
+                    placeholder="000000"
+                    className="w-full max-w-[200px] text-center bg-transparent outline-none text-4xl font-black tracking-[0.5em] text-indigo-900 placeholder:text-indigo-200"
                   />
                 </div>
-                <button
-                  onClick={() => setIsOTPPhase(false)}
-                  className="text-xs font-bold text-indigo-600 flex items-center gap-1"
-                >
-                  <ChevronLeft size={14} /> Back to Edit
+                <button onClick={() => setIsOTPPhase(false)} className="text-sm font-bold text-indigo-600 flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
+                  <ChevronLeft size={16} /> Edit details
                 </button>
               </div>
             )}
 
-            {/* Action Buttons */}
-            {!isOTPVerified ? (
-              <button
-                disabled={!isPasswordMatching || isLoading}
-                onClick={!isOTPPhase ? handleGetOTP : handleVerifyOTP}
-                className={`w-full py-4 rounded-xl text-white font-bold shadow-lg transition-all flex items-center justify-center gap-2 mt-6 active:scale-95 ${
-                  !isPasswordMatching || isLoading
-                    ? "bg-slate-400 cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-                }`}
-              >
-                {isLoading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <>
-                    <span>{isOTPPhase ? "Verify OTP" : "Get OTP"}</span>
-                    <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-            ) : (
-              <button
-                disabled={isLoading}
-                onClick={handleCreateAccount}
-                className={`w-full py-4 rounded-xl text-white font-bold shadow-lg transition-all flex items-center justify-center gap-2 mt-6 active:scale-95 ${
-                  isLoading ? "bg-slate-400" : "bg-green-600 hover:bg-green-700"
-                }`}
-              >
-                {isLoading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  "Create Account"
-                )}
-              </button>
+            {isOTPVerified && (
+               <div className="flex flex-col items-center justify-center p-10 bg-green-50 rounded-[2rem] border border-green-100 animate-in zoom-in duration-500">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle2 size={40} className="text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-green-900">Verification Complete</h3>
+                  <p className="text-green-700 text-sm mt-1">You are ready to join the community</p>
+               </div>
             )}
+
+            {/* Main Action Button */}
+            <button
+              disabled={(!isOTPPhase && !isOTPVerified && !isPasswordMatching) || isLoading}
+              onClick={isOTPVerified ? handleCreateAccount : isOTPPhase ? handleVerifyOTP : handleGetOTP}
+              className={`w-full py-4.5 rounded-2xl text-white font-extrabold shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95 ${
+                isLoading
+                  ? "bg-slate-400 cursor-not-allowed"
+                  : isOTPVerified ? "bg-green-600 hover:bg-green-700" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200/50"
+              }`}
+            >
+              {isLoading ? (
+                <Loader2 className="animate-spin" size={22} />
+              ) : (
+                <>
+                  <span>{isOTPVerified ? "Complete Registration" : isOTPPhase ? "Verify Now" : "Continue"}</span>
+                  {!isOTPVerified && <ArrowRight size={20} />}
+                </>
+              )}
+            </button>
           </div>
+
+          <p className="mt-10 text-center text-sm font-semibold text-slate-500">
+            Already have an account?{" "}
+            <button onClick={() => navigate("/login")} className="ml-1 text-indigo-600 font-black hover:underline">
+              Log In
+            </button>
+          </p>
         </div>
       </div>
     </div>

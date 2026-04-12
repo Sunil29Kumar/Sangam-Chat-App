@@ -8,6 +8,8 @@ import Layout from "../../layout/Layout";
 
 function ProtectedRoute() {
   const {isAuth, setIsAuth, checkAuthentication} = useAuth();
+  console.log(isAuth);
+  
 
   useEffect(() => {
     // Interceptor yahan define kiya taaki sirf isi route ke children par chale
