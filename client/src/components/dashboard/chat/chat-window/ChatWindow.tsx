@@ -1,32 +1,33 @@
-import {
-  Send,
-  MessageSquare,
-  Phone,
-  Video,
-  MoreVertical,
-  Smile,
-} from "lucide-react";
-import { ChatContext } from "../../../../context/ChatContext";
-import { useContext, useEffect, useRef, useState } from "react";
-import { useSocket } from "../../../../hooks/useSocket";
-import { AuthContext } from "../../../../context/AuthContext";
+import {MessageSquare, Phone, Video, MoreVertical} from "lucide-react";
+import {ChatContext} from "../../../../context/ChatContext";
+import {useContext, useEffect, useRef, useState} from "react";
+import {useSocket} from "../../../../hooks/useSocket";
+import {AuthContext} from "../../../../context/AuthContext";
+import MessageInputContainer from "./MessageInputContainer";
+import MessageArea from "./MessageArea";
 
 const ChatWindow = () => {
   const chatContext = useContext(ChatContext);
-  const { user } = useContext(AuthContext);
-  const { socket } = useSocket();
+  const {user} = useContext(AuthContext);
+  const {socket} = useSocket();
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  // const [isTyping, setIsTyping] = useState(false);
+  // const [typingStatus, setTypingStatus] = useState("");
+  let typingTimeout: any;
 
   if (!chatContext) return null;
-  const { selectedConversation, getMessages, messages, setMessages } = chatContext;
+  const {selectedConversation, getMessages, messages, setMessages , isTyping , setIsTyping , typingStatus , setTypingStatus} =
+    chatContext;
 
+  // Selected conversation change hone pe messages fetch karne hai
   useEffect(() => {
     if (selectedConversation?._id) {
       getMessages(selectedConversation._id);
     }
   }, [selectedConversation?._id]);
 
+  // Socket se new message receive hone pe messages update karne hai
   useEffect(() => {
     if (!socket) return;
     socket.on("new_message", (message: any) => {
@@ -34,9 +35,12 @@ const ChatWindow = () => {
         setMessages((prev) => [...prev, message]);
       }
     });
-    return () => { socket.off("new_message"); };
+    return () => {
+      socket.off("new_message");
+    };
   }, [socket, selectedConversation?._id, setMessages]);
 
+  // Messages update hone pe scroll karna hai
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -53,6 +57,42 @@ const ChatWindow = () => {
     socket?.emit("send_message", messageData);
     setText("");
   };
+
+  // handle Typing status
+  const handleTyping = () => {
+    socket?.emit("typing", {
+      conversationId: selectedConversation._id,
+      senderName: user.name,
+    });
+
+    if (typingTimeout) clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+      socket?.emit("stop_typing", {conversationId: selectedConversation._id});
+    }, 2000);
+  };
+
+  // 2. Listen for Typing Status (useEffect mein)
+  useEffect(() => {
+    socket?.on("display_typing", (data) => {
+      console.log("t data ",data);
+      
+      setIsTyping(true);
+      setTypingStatus(`${data.senderName} typing...`);
+    });
+
+    socket?.on("hide_typing", () => {
+      setIsTyping(false);
+      setTypingStatus("");
+    });
+
+    return () => {
+      socket?.off("display_typing");
+      socket?.off("hide_typing");
+    };
+  }, [socket]);
+
+
 
   if (!selectedConversation) {
     return (
@@ -71,7 +111,7 @@ const ChatWindow = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white h-screen max-h-screen overflow-hidden">
+    <div className=" flex-1 flex flex-col bg-white h-screen max-h-screen overflow-hidden">
       {/* --- Chat Header --- */}
       <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white/90 backdrop-blur-md z-20 shadow-sm">
         <div className="flex items-center gap-4">
@@ -93,88 +133,29 @@ const ChatWindow = () => {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all"><Phone size={19} /></button>
-          <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all"><Video size={19} /></button>
-          <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all"><MoreVertical size={19} /></button>
+          <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
+            <Phone size={19} />
+          </button>
+          <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
+            <Video size={19} />
+          </button>
+          <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
+            <MoreVertical size={19} />
+          </button>
         </div>
       </div>
 
       {/* --- Messages Area --- */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#fafafa] custom-scrollbar scroll-smooth"
-      >
-        {messages.length > 0 ? (
-          messages.map((msg, index) => {
-            const isMe = msg.sender === user._id || msg.senderId === user._id;
-            return (
-              <div
-                key={msg._id || index}
-                className={`flex items-end gap-3 max-w-[85%] ${isMe ? "ml-auto flex-row-reverse" : ""}`}
-              >
-                <div
-                  className={`px-4 py-3 rounded-2xl text-[14.5px] font-medium leading-relaxed shadow-sm ${
-                    isMe
-                      ? "bg-indigo-600 text-white rounded-br-none shadow-indigo-100/50"
-                      : "bg-white text-slate-700 rounded-bl-none border border-slate-100"
-                  }`}
-                >
-                  <p>{msg.content}</p>
-                  <span
-                    className={`text-[9px] mt-1.5 block font-bold uppercase tracking-tighter opacity-70 ${
-                      isMe ? "text-right" : ""
-                    }`}
-                  >
-                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300">
-             <MessageSquare size={40} className="mb-2 opacity-20" />
-             <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">End-to-end encrypted</p>
-          </div>
-        )}
-      </div>
+      <MessageArea scrollRef={scrollRef} messages={messages} user={user}  />
 
       {/* --- Message Input Container --- */}
-      <div className="px-6 py-4 bg-white border-t border-slate-50 py-10">
 
-        <div className="max-w-4xl mx-auto flex items-center gap-3 bg-slate-100/80 p-1.5 pl-4 rounded-[1.8rem] focus-within:ring-4 focus-within:ring-indigo-500/5 focus-within:bg-white focus-within:border-indigo-100 border-2 border-transparent transition-all shadow-inner">
-
-          <button className="text-slate-400 hover:text-indigo-500 p-2 transition-colors">
-            <Smile size={22} />
-          </button>
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Type a message..."
-            className="flex-1 bg-transparent border-none outline-none text-[15px] font-semibold text-slate-700 py-2.5 placeholder:text-slate-400"
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!text.trim()}
-            className={`w-11 h-11 flex items-center justify-center rounded-full transition-all shadow-lg active:scale-90 ${
-                text.trim() 
-                ? "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700" 
-                : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
-            }`}
-          >
-            <Send size={18} fill={text.trim() ? "currentColor" : "none"} className={text.trim() ? "ml-0.5" : ""} />
-          </button>
-        </div>
-
-        {/* Helper text for safety */}
-        <p className="text-center text-[9px] text-slate-400 mt-2 font-bold uppercase tracking-[0.1em]">
-          Press Enter to send
-        </p>
-
-      </div>
-
+      <MessageInputContainer
+        text={text}
+        setText={setText}
+        handleSendMessage={handleSendMessage}
+        handleTyping ={handleTyping}
+      />
     </div>
   );
 };

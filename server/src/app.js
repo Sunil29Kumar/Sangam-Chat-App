@@ -12,13 +12,16 @@ import chatRoutes from "./routes/chat.route.js";
 import { connectDB } from "./database/db.js";
 import checkAuth from "./middleware/authMiddleware.js";
 import { socket } from "./socket/socket.js";
-
+import routesRoot from "./routes/index.js";
+import { errorHandler } from "./middleware/errorMiddleware.js";
 await connectDB();
 
 const PORT = process.env.PORT || 9999;
 const app = express();
 
+// Middleware
 app.use(express.json());
+app.use(errorHandler)
 app.use(cookieParser(process.env.COOKIE_KEY));
 app.use(cors({
     origin: process.env.CLIENT_URL,
@@ -27,15 +30,13 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-const server = createServer(app);
 
+const server = createServer(app);
 socket(server);
 
 // Routes
-app.get("/", (req, res) => res.send("Server Working 🚀"));
-app.use("/auth", authRoutes);
-app.use("/user", checkAuth, userRoutes);
-app.use("/chat", checkAuth, chatRoutes);
+app.use("/",routesRoot );
+
 
 server.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);

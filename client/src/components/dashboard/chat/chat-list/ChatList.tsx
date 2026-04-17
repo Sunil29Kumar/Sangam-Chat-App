@@ -15,10 +15,13 @@ const ChatList = ({
     conversations,
     selectedConversation,
     setSelectedConversation,
+    loading,
+    typingStatus,isTyping
   } = useContext(ChatContext);
   const [searchQuery, setSearchQuery] = useState("");
   const {joinRoom} = useSocket();
-
+  console.log("t status ", typingStatus);
+  
   useEffect(() => {
     getConversations();
   }, []);
@@ -28,7 +31,6 @@ const ChatList = ({
     c.otherParticipant?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
   console.log(filteredConversations);
-  
 
   const handleConversationClick = (conv: any) => {
     setSelectedConversation(conv); // Right window update hogi
@@ -85,72 +87,86 @@ const ChatList = ({
       </div>
 
       {/* --- Conversations List --- */}
-      <div className="flex-1 overflow-y-auto px-4 space-y-1.5 pb-10 custom-scrollbar">
-        {filteredConversations && filteredConversations.length > 0 ? (
-          filteredConversations.map((conversation: any) => (
-            <div
-              key={conversation._id}
-              onClick={() => handleConversationClick(conversation)}
-              className={`relative flex items-center gap-4 p-3.5 rounded-[1.4rem] hover:bg-indigo-50/50 cursor-pointer transition-all duration-200 border border-transparent hover:border-indigo-50 group active:scale-[0.98] ${selectedConversation?._id === conversation._id ? "bg-indigo-50 border-indigo-100" : ""}`}
-            >
-              {/* Avatar section with Status */}
-              <div className="relative flex-shrink-0">
-                <div className="w-[54px] h-[54px] rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm transition-transform group-hover:scale-105 duration-300">
-                  <img
-                    src={
-                      conversation.otherParticipant?.profilePic ||
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${conversation.otherParticipant?.name}`
-                    }
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                {/* Online Indicator (Optional - can be tied to real state later) */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-[3px] border-white rounded-full shadow-sm"></div>
-              </div>
-
-              {/* User Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-baseline">
-                  <h4 className="font-extrabold text-slate-800 truncate text-[15px] tracking-tight group-hover:text-indigo-700 transition-colors">
-                    {conversation.otherParticipant?.name}
-                  </h4>
-                  <span className="text-[10px] font-black text-slate-400 uppercase ml-2 flex-shrink-0">
-                    {conversation.lastMessage?.time || "12:45 PM"}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center mt-0.5">
-                  <p className="text-[13px] text-slate-500 truncate font-medium max-w-[180px]">
-                    {conversation.lastMessage?.text ||
-                      conversation.otherParticipant?.email}
-                  </p>
-
-                  {/* Unread Badge (Mockup) */}
-                  <div className="hidden group-hover:block transition-all">
-                    <MoreVertical
-                      size={14}
-                      className="text-slate-300 hover:text-slate-600"
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <p className="text-sm font-medium text-slate-500">
+            Loading conversations...
+          </p>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto px-4 space-y-1.5 pb-10 custom-scrollbar">
+          {filteredConversations && filteredConversations.length > 0 ? (
+            filteredConversations.map((conversation: any) => (
+              <div
+                key={conversation._id}
+                onClick={() => handleConversationClick(conversation)}
+                className={`relative flex items-center gap-4 p-3.5 rounded-[1.4rem] hover:bg-indigo-50/50 cursor-pointer transition-all duration-200 border border-transparent hover:border-indigo-50 group active:scale-[0.98] ${selectedConversation?._id === conversation._id ? "bg-indigo-50 border-indigo-100" : ""}`}
+              >
+                {/* Avatar section with Status */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-[54px] h-[54px] rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm transition-transform group-hover:scale-105 duration-300">
+                    <img
+                      src={
+                        conversation.otherParticipant?.profilePic ||
+                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${conversation.otherParticipant?.name}`
+                      }
+                      alt="Profile"
+                      className="w-full h-full object-cover"
                     />
                   </div>
+                  {/* Online Indicator (Optional - can be tied to real state later) */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-[3px] border-white rounded-full shadow-sm"></div>
                 </div>
-              </div>
 
-              {/* Selection Indicator */}
-              <div className="absolute left-0 w-1 h-8 bg-indigo-600 rounded-r-full scale-y-0 group-hover:scale-y-100 transition-transform duration-300"></div>
+                {/* User Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline">
+                    <h4 className="font-extrabold text-slate-800 truncate text-[15px] tracking-tight group-hover:text-indigo-700 transition-colors">
+                      {conversation.otherParticipant?.name}
+                    </h4>
+                    <span className="text-[10px] font-black text-slate-400 uppercase ml-2 flex-shrink-0">
+                      {conversation.lastMessage?.time || "12:45 PM"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center mt-0.5">
+                    <p className="text-[13px] text-slate-500 truncate font-medium max-w-[180px]">
+                      {conversation.lastMessage?.text ||
+                        conversation.otherParticipant?.email}
+                    </p>
+
+                    {isTyping && selectedConversation?._id === conversation._id ? (
+                      <span className="text-xs font-bold text-green-500 ">
+                        Typing...
+                      </span>
+                    ) : null}
+
+                    {/* Unread Badge (Mockup) */}
+                    <div className="hidden group-hover:block transition-all">
+                      <MoreVertical
+                        size={14}
+                        className="text-slate-300 hover:text-slate-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Selection Indicator */}
+                <div className="absolute left-0 w-1 h-8 bg-indigo-600 rounded-r-full scale-y-0 group-hover:scale-y-100 transition-transform duration-300"></div>
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 px-10 text-center">
+              <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mb-4">
+                <MessageSquare size={24} className="text-slate-300" />
+              </div>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+                No conversations found
+              </p>
             </div>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 px-10 text-center">
-            <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mb-4">
-              <MessageSquare size={24} className="text-slate-300" />
-            </div>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-              No conversations found
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

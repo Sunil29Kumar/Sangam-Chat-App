@@ -10,6 +10,8 @@ interface ChatContextType {
   setSelectedConversation: (conversation: any | null) => void;
   messages: any[];
   setMessages: (messages: any[]) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
 
   // function
   getConversations: () => Promise<any>;
@@ -24,19 +26,27 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
 
   const [messages, setMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+    const [isTyping, setIsTyping] = useState(false);
+  const [typingStatus, setTypingStatus] = useState("");
 
   const getConversations = async () => {
+    setLoading(true);
+
     try {
       const response = await getConversationsAuth();
       // console.log(response.conversations);
 
       if (response.success) {
         setConversations(response.conversations);
+        setLoading(false);
       }
     } catch (error: any) {
       showToast.error(
         error?.message || "An error occurred while fetching conversations.",
       );
+      setLoading(false);
     }
   };
 
@@ -59,7 +69,7 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
   };
 
   return (
-    <ChatContext.Provider value={{conversations, getConversations , setConversations, selectedConversation, setSelectedConversation, getMessages , messages, setMessages}}>
+    <ChatContext.Provider value={{conversations, getConversations , setConversations, selectedConversation, setSelectedConversation, getMessages , messages, setMessages, loading, setLoading , isTyping, setIsTyping, typingStatus, setTypingStatus}}>
       {children}
     </ChatContext.Provider>
   );

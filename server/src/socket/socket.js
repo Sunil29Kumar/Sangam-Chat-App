@@ -38,6 +38,19 @@ export const socket = (server) => {
             try {
                 if (!content || !conversationId) return;
 
+                // Check if conversation exists
+                const conversation = await Conversation.findById(conversationId);
+                if (!conversation) {
+                    return;
+                }
+
+                // Check if sender is part of the conversation
+                if (!conversation.participants.includes(senderId)) {
+                    return;
+                }
+
+                // if sender is part of conversation , push message to message model (in content)
+
                 // Database mein message save karein
                 const newMessage = new Message({
                     sender: senderId,
@@ -64,12 +77,12 @@ export const socket = (server) => {
         });
 
         // 3. Typing Indicator
-        socket.on("typing", (conversationId) => {
-            socket.to(conversationId).emit("user_typing", { userId });
+        socket.on("typing", (data) => {
+            socket.to(data.conversationId).emit("display_typing", { data });
         });
 
-        socket.on("stop_typing", (conversationId) => {
-            socket.to(conversationId).emit("user_stop_typing", { userId });
+        socket.on("stop_typing", (data) => {
+            socket.to(data.conversationId).emit("hide_typing", { data });
         });
 
         // 4. Disconnect
