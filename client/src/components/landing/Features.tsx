@@ -1,4 +1,4 @@
-import { Shield, Zap, Users, MessageSquare, Lock, Globe } from "lucide-react";
+import { Shield, Zap, Users } from "lucide-react";
 
 const Features = () => {
   const feats = [

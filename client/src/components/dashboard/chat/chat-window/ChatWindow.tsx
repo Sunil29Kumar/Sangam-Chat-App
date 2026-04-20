@@ -8,17 +8,25 @@ import MessageArea from "./MessageArea";
 
 const ChatWindow = () => {
   const chatContext = useContext(ChatContext);
-  const {user} = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
   const {socket} = useSocket();
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  // const [isTyping, setIsTyping] = useState(false);
-  // const [typingStatus, setTypingStatus] = useState("");
   let typingTimeout: any;
 
   if (!chatContext) return null;
-  const {selectedConversation, getMessages, messages, setMessages , isTyping , setIsTyping , typingStatus , setTypingStatus} =
-    chatContext;
+
+  const {
+    selectedConversation,
+    getMessages,
+    messages,
+    setMessages,
+    setIsTyping,
+    setTypingStatus,
+  } = chatContext;
+
+  if (!authContext) return null;
+  const {user} = authContext;
 
   // Selected conversation change hone pe messages fetch karne hai
   useEffect(() => {
@@ -75,8 +83,6 @@ const ChatWindow = () => {
   // 2. Listen for Typing Status (useEffect mein)
   useEffect(() => {
     socket?.on("display_typing", (data) => {
-      console.log("t data ",data);
-      
       setIsTyping(true);
       setTypingStatus(`${data.senderName} typing...`);
     });
@@ -91,8 +97,6 @@ const ChatWindow = () => {
       socket?.off("hide_typing");
     };
   }, [socket]);
-
-
 
   if (!selectedConversation) {
     return (
@@ -146,7 +150,7 @@ const ChatWindow = () => {
       </div>
 
       {/* --- Messages Area --- */}
-      <MessageArea scrollRef={scrollRef} messages={messages} user={user}  />
+      <MessageArea scrollRef={scrollRef as React.RefObject<HTMLDivElement>} messages={messages} user={user} />
 
       {/* --- Message Input Container --- */}
 
@@ -154,7 +158,7 @@ const ChatWindow = () => {
         text={text}
         setText={setText}
         handleSendMessage={handleSendMessage}
-        handleTyping ={handleTyping}
+        handleTyping={handleTyping}
       />
     </div>
   );

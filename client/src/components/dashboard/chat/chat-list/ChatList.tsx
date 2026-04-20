@@ -1,4 +1,4 @@
-import {MessageSquare, Plus, Search, Users, MoreVertical} from "lucide-react";
+import {MessageSquare, Plus, Search, MoreVertical} from "lucide-react";
 import AddUser from "./AddUser";
 import {ChatContext} from "../../../../context/ChatContext";
 import {useContext, useEffect, useState} from "react";
@@ -10,18 +10,25 @@ const ChatList = ({
   setIsNewChatModalOpen: (open: boolean) => void;
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const context = useContext(ChatContext);
+
+  // Agar context null hai, toh yahi se ruk jao
+  if (!context) {
+    throw new Error("ChatList must be used within a ChatProvider");
+  }
+
   const {
     getConversations,
     conversations,
     selectedConversation,
     setSelectedConversation,
     loading,
-    typingStatus,isTyping
-  } = useContext(ChatContext);
+    isTyping,
+  } = context;
+
   const [searchQuery, setSearchQuery] = useState("");
   const {joinRoom} = useSocket();
-  console.log("t status ", typingStatus);
-  
+
   useEffect(() => {
     getConversations();
   }, []);
@@ -30,7 +37,6 @@ const ChatList = ({
   const filteredConversations = conversations?.filter((c: any) =>
     c.otherParticipant?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-  console.log(filteredConversations);
 
   const handleConversationClick = (conv: any) => {
     setSelectedConversation(conv); // Right window update hogi
@@ -135,7 +141,8 @@ const ChatList = ({
                         conversation.otherParticipant?.email}
                     </p>
 
-                    {isTyping && selectedConversation?._id === conversation._id ? (
+                    {isTyping &&
+                    selectedConversation?._id === conversation._id ? (
                       <span className="text-xs font-bold text-green-500 ">
                         Typing...
                       </span>

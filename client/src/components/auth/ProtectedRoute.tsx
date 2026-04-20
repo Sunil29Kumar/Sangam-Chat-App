@@ -1,6 +1,6 @@
 import {useEffect} from "react";
 import AuthLoader from "./AuthLoader";
-import {Navigate, Outlet} from "react-router-dom";
+import {Navigate} from "react-router-dom";
 import axiosInstance from "../../api/axios";
 import {useAuth} from "../../hooks/useAuth";
 import {showToast} from "../../utils/toast";
@@ -26,7 +26,7 @@ function ProtectedRoute() {
             message === "Authentication required. Please log in." ||
             message === "Session expired. Please log in again."
           ) {
-            showToast.error(message, {toasterId: "error"});
+            showToast.error(message);
           }
           // User ko logout state mein set karo
           setIsAuth(false);

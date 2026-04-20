@@ -1,11 +1,16 @@
-import {useContext, useState} from "react";
-import {ChatContext} from "../context/ChatContext";
-import {createConversationAuth, getConversationsAuth, searchUserAuth} from "../api/chatApi";
+import { useState } from "react";
+import {
+  createConversationAuth,
+  deleteMessageFromEveryoneAuth,
+  
+  searchUserAuth,
+} from "../api/chatApi";
 import {showToast} from "../utils/toast";
 
 export const useChat = () => {
   //   const {} = useContext(ChatContext);
   const [loading, setLoading] = useState(false);
+
   const searchUser = async (query: string) => {
     setLoading(true);
     try {
@@ -37,9 +42,34 @@ export const useChat = () => {
     }
   };
 
+  const deleteMessageFromEveryone = async (
+    conversationId: string,
+    messageId: string,
+  ) => {
+    try {
+      const response = await deleteMessageFromEveryoneAuth(
+        conversationId,
+        messageId,
+      );
+      console.log(response);
+      if(response?.success) showToast.success(response.message);
+      else showToast.error(response?.message || "Failed to delete message for everyone.");
+      return response;
+    } catch (error: string | any) {
+      showToast.error(
+        error?.message ||
+          "An error occurred while deleting message for everyone.",
+      );
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     searchUser,
     createConversation,
+    deleteMessageFromEveryone,
     loading,
   };
 };

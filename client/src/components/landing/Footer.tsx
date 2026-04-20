@@ -3,7 +3,7 @@ import {Link, useLocation, useNavigate} from "react-router-dom";
 import {Link as ScrollLink} from "react-scroll";
 
 // React Icons for Social Media
-import {FaGithub, FaLinkedinIn, FaYoutube, FaInstagram} from "react-icons/fa";
+import {FaGithub, FaLinkedinIn, FaInstagram} from "react-icons/fa";
 import {FaXTwitter} from "react-icons/fa6"; // Latest X (Twitter) icon
 
 const Footer = () => {

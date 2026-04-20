@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import {
   User,
   Mail,
@@ -40,7 +40,7 @@ const SignUp = () => {
     confirmPassword: "",
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newFormData = { ...prev, [name]: value }; 
@@ -51,7 +51,7 @@ const SignUp = () => {
       return newFormData;
     });
     // Clear error when user types
-    if (inputErrors[name]) setInputErrors({ ...inputErrors, [name]: "" });
+    if (inputErrors[name as keyof typeof inputErrors]) setInputErrors({ ...inputErrors, [name]: "" });
   };
 
   const handleGetOTP = async () => {
@@ -88,7 +88,7 @@ const SignUp = () => {
     }
   };
 
-  const handleCreateAccount = async (e) => {
+  const handleCreateAccount = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     try {

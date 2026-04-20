@@ -1,62 +1,109 @@
-import {MessageSquare} from "lucide-react";
-import React from "react";
+import { MessageSquare, MoreVertical, Trash2, UserMinus, Smile, Reply } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { useChat } from "../../../../hooks/useChat";
 
-function MessageArea({
-  scrollRef,
-  messages,
-  user,
-}: {
-  scrollRef: React.RefObject<HTMLDivElement>;
-  messages: any[];
-  user: any;
- 
-}) {
+function MessageArea({ scrollRef, messages, user }: { scrollRef: React.RefObject<HTMLDivElement>; messages: any[]; user: any }) {
+  const { deleteMessageFromEveryone } = useChat();
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // Bahar click karne par menu band ho jaye
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div
-      ref={scrollRef}
-      className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#fafafa] custom-scrollbar scroll-smooth"
-    >
+    <div ref={scrollRef as React.RefObject<HTMLDivElement>} className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#fafafa] custom-scrollbar scroll-smooth">
       {messages.length > 0 ? (
         messages.map((msg, index) => {
           const isMe = msg.sender === user._id || msg.senderId === user._id;
+          const isMenuOpen = activeMenu === msg._id;
+
           return (
-            <div
-              key={msg._id || index}
-              className={`flex items-end gap-3 max-w-[85%] ${isMe ? "ml-auto flex-row-reverse" : ""}`}
-            >
-              <div
-                className={`px-4 py-3 rounded-2xl text-[14.5px] font-medium leading-relaxed shadow-sm ${
-                  isMe
-                    ? "bg-indigo-600 text-white rounded-br-none shadow-indigo-100/50"
-                    : "bg-white text-slate-700 rounded-bl-none border border-slate-100"
-                }`}
-              >
-                <p>{msg.content}</p>
-                <span
-                  className={`text-[9px] mt-1.5 block font-bold uppercase tracking-tighter opacity-70 ${
-                    isMe ? "text-right" : ""
+            <div key={msg._id || index} className={`flex items-end gap-3 max-w-[85%] group ${isMe ? "ml-auto flex-row-reverse" : ""}`}>
+              
+              {/* Message Bubble Container */}
+              <div className="relative flex items-center gap-2">
+                
+                {/* Extra Features Button (Visible on Hover) */}
+                <div className={`opacity-0 group-hover:opacity-100 transition-opacity ${isMe ? "order-1" : "order-2"}`}>
+                  <button 
+                    onClick={() => setActiveMenu(isMenuOpen ? null : msg._id)}
+                    className="p-1.5 hover:bg-slate-200 rounded-full text-slate-400 transition-colors"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                </div>
+
+                <div className={`relative px-4 py-3 rounded-2xl text-[14.5px] font-medium leading-relaxed shadow-sm transition-all ${
+                    isMe ? "bg-indigo-600 text-white rounded-br-none shadow-indigo-100/50 order-2" 
+                         : "bg-white text-slate-700 rounded-bl-none border border-slate-100 order-1"
                   }`}
                 >
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                
+                  <p>{msg.content}</p>
+                  <span className={`text-[9px] mt-1.5 block font-bold uppercase tracking-tighter opacity-70 ${isMe ? "text-right" : ""}`}>
+                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+
+                  {/* --- Modern Action Dropdown --- */}
+                  {isMenuOpen && (
+                    <div 
+                      ref={menuRef}
+                      className={`absolute bottom-full mb-2 z-50 w-48 bg-white border border-slate-100 shadow-2xl rounded-2xl overflow-hidden py-1.5 animate-in fade-in zoom-in duration-200 ${
+                        isMe ? "right-0 origin-bottom-right" : "left-0 origin-bottom-left"
+                      }`}
+                    >
+                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+                        <Reply size={14} /> Reply
+                      </button>
+                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+                        <Smile size={14} /> React
+                      </button>
+                      
+                      <div className="h-px bg-slate-100 my-1 mx-2" />
+                      
+                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                        <UserMinus size={14} /> Delete for me
+                      </button>
+
+                      {isMe && (
+                        <button
+                          onClick={() => {
+                            deleteMessageFromEveryone(msg.conversationId, msg._id);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors font-semibold"
+                        >
+                          <Trash2 size={14} /> Delete for everyone
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );
         })
       ) : (
-        <div className="h-full flex flex-col items-center justify-center text-slate-300">
-          <MessageSquare size={40} className="mb-2 opacity-20" />
-          <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">
-            End-to-end encrypted
-          </p>
-        </div>
+        <EmptyState />
       )}
     </div>
   );
 }
+
+const EmptyState = () => (
+  <div className="h-full flex flex-col items-center justify-center text-slate-300">
+    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+      <MessageSquare size={40} className="opacity-20" />
+    </div>
+    <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">End-to-end encrypted</p>
+  </div>
+);
 
 export default MessageArea;

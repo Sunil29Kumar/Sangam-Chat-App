@@ -6,6 +6,10 @@ const MessageSchema = new mongoose.Schema({
     content: { type: String, },
     isRead: { type: Boolean, default: false },
     readedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    delete:{
+        deleteFormEveryOne:{type:Boolean,default:false},
+        deleteForMe:{type:mongoose.Schema.Types.ObjectId, ref: 'User',}
+    }
 }, { timestamps: true });
 
 const Message = mongoose.model('Message', MessageSchema);

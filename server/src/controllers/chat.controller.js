@@ -8,7 +8,7 @@ export const searchUser = async (req, res) => {
     try {
         const { query } = req.query;
         if (!query) {
-            return res.status(400).json({ message: "Query parameter is required" });
+            return res.status(400).json({ message: "Query parameter is required", success: false });
         }
 
         // search user by username or email
@@ -20,12 +20,12 @@ export const searchUser = async (req, res) => {
         });
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "User not found", success: false });
         }
 
-        return res.status(200).json({ success: true, user , message: "User found" });
+        return res.status(200).json({ success: true, user, message: "User found" });
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
 }
 
@@ -35,7 +35,7 @@ export const createConversation = async (req, res) => {
         const senderId = req.user._id;
 
         console.log(recipientId);
-        
+
 
         // Check if a conversation already exists between the sender and recipient
         let conversation = await Conversation.findOne({
@@ -43,7 +43,7 @@ export const createConversation = async (req, res) => {
             participants: { $all: [senderId, recipientId] }
         });
         if (conversation) {
-            return res.status(200).json({ conversation, isNew: false, message: "Conversation already exists" });
+            return res.status(200).json({ conversation, isNew: false, message: "Conversation already exists", success: true });
         }
 
         // If not, create a new conversation
@@ -53,13 +53,13 @@ export const createConversation = async (req, res) => {
         });
 
         console.log(newConversation);
-        
+
 
         await newConversation.save();
-        return res.status(201).json({ conversation: newConversation, isNew: true, message: "Conversation created successfully" , success: true});
+        return res.status(201).json({ conversation: newConversation, isNew: true, message: "Conversation created successfully", success: true });
 
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
 }
 
@@ -75,9 +75,9 @@ export const getConversations = async (req, res) => {
             const otherParticipant = conv.participants.find(p => p._id.toString() !== userId.toString());
             return { ...conv.toObject(), otherParticipant };
         });
-        return res.status(200).json({ conversations: formattedConversations, message: "Conversations fetched successfully" ,success: true});
+        return res.status(200).json({ conversations: formattedConversations, message: "Conversations fetched successfully", success: true });
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
 }
 
@@ -86,8 +86,20 @@ export const getMessages = async (req, res) => {
     try {
         const { conversationId } = req.params;
         const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
-        res.status(200).json({ success: true, messages });
+        return res.status(200).json({ success: true, messages });
     } catch (error) {
-        res.status(500).json({ message: "Error fetching messages" });
+        return res.status(500).json({ message: "Error fetching messages", success: false });
     }
 };
+
+
+export const deleteMessage = async (req, res) => {
+    try {
+        const { message } = req.chatContext;
+        await Message.findByIdAndDelete(message._id);
+        
+        return res.status(200).json({ message: "Message deleted successfully", success: true });
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error", success: false, error : error.message });
+    }
+}

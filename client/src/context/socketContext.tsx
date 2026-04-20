@@ -11,9 +11,12 @@ export const socketContext = createContext<socketContextType | null>(null);
 
 export default function SocketProvider({ children }: { children: React.ReactNode }) {
     
-    const { user } = useContext(AuthContext);
+    const authContext = useContext(AuthContext);
     const [socket, setSocket] = useState<Socket | null>(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
+
+    if (!authContext) return null;
+    const { user } = authContext;
 
     useEffect(() => {
         if (user) {

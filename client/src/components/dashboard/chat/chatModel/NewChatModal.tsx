@@ -1,5 +1,5 @@
-import {X, Search, UserPlus, Info, CheckCircle2, Loader2} from "lucide-react";
-import {useChat} from "../../../../hooks/chatAuth";
+import {X, Search, UserPlus,  CheckCircle2, Loader2} from "lucide-react";
+import {useChat} from "../../../../hooks/useChat";
 import {useContext, useState} from "react";
 import {showToast} from "../../../../utils/toast";
 import {ChatContext} from "../../../../context/ChatContext";
@@ -15,7 +15,13 @@ const NewChatModal = ({
   const [searchUserResults, setSearchUserResults] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>("");
 
-  const {getConversations} = useContext(ChatContext);
+  const chatContext = useContext(ChatContext);
+
+  if(!chatContext) return null;
+
+  const {getConversations} = chatContext;
+
+  
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {

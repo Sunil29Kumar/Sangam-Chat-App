@@ -9,9 +9,13 @@ interface ChatContextType {
   selectedConversation: any | null;
   setSelectedConversation: (conversation: any | null) => void;
   messages: any[];
-  setMessages: (messages: any[]) => void;
+  setMessages: React.Dispatch<React.SetStateAction<any[]>>;
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  isTyping: boolean;
+  setIsTyping: (typing: boolean) => void;
+  typingStatus: string;
+  setTypingStatus: (status: string) => void;
 
   // function
   getConversations: () => Promise<any>;

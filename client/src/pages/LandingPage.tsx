@@ -1,4 +1,3 @@
-import Hero from "../components/landing/About";
 import Navbar from "../components/landing/Navbar";
 import Footer from "../components/landing/Footer";
 import Features from "../components/landing/Features";

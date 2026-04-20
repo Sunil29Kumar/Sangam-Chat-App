@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, Zap, Shield, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

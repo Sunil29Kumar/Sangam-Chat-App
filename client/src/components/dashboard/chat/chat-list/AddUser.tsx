@@ -1,5 +1,4 @@
 import {MessageSquare, Users} from "lucide-react";
-import React from "react";
 
 function AddUser({
   setIsMenuOpen,

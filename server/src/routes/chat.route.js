@@ -1,6 +1,7 @@
 
 import express from "express";
-import { createConversation, getConversations, getMessages, searchUser } from "../controllers/chat.controller.js";
+import { createConversation, deleteMessage, getConversations, getMessages, searchUser } from "../controllers/chat.controller.js";
+import { chatGuard } from "../middleware/chatGuard.js";
 
 
 const router = express.Router()
@@ -16,6 +17,7 @@ router.post("/conversations", createConversation);
 
 // Message routes
 router.get("/conversations/:conversationId/messages",getMessages)
+router.delete("/conversations/:conversationId/messages/:messageId/delete_for_everyone",chatGuard({ checkSender: true }), deleteMessage)
 
 
 export default router;

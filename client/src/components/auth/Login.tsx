@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import {
   Mail,
   Lock,
@@ -27,7 +27,7 @@ const Login = () => {
     password: "",
   });
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     // Reset errors on new attempt
