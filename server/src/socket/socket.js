@@ -1,6 +1,9 @@
 import { Server } from "socket.io";
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 
 export const socket = (server) => {
