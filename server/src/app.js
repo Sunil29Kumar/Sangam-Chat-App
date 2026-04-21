@@ -35,7 +35,7 @@ const server = createServer(app);
 socket(server);
 
 // Routes
-app.use("/",routesRoot );
+app.use("/api",routesRoot );
 
 
 server.listen(PORT, () => {
