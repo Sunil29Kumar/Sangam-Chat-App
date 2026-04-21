@@ -116,7 +116,7 @@ export const login = async (req, res) => {
             signed: true,
             maxAge: duration,
             sameSite: "lax",
-            secure: fasle // abhi http hay is leya false  
+            secure: false // abhi http hay is leya false  
         });
 
         // 3. Set session in DB
