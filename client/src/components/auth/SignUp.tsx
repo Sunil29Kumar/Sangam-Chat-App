@@ -88,7 +88,7 @@ const SignUp = () => {
     }
   };
 
-  const handleCreateAccount = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateAccount = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
     try {
@@ -263,7 +263,7 @@ const SignUp = () => {
             {/* Main Action Button */}
             <button
               disabled={(!isOTPPhase && !isOTPVerified && !isPasswordMatching) || isLoading}
-              onClick={isOTPVerified ? handleCreateAccount : isOTPPhase ? handleVerifyOTP : handleGetOTP}
+              onClick={isOTPVerified ? (handleCreateAccount as any) : isOTPPhase ? (handleVerifyOTP as any) : (handleGetOTP as any)}
               className={`w-full py-4.5 rounded-2xl text-white font-extrabold shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95 ${
                 isLoading
                   ? "bg-slate-400 cursor-not-allowed"

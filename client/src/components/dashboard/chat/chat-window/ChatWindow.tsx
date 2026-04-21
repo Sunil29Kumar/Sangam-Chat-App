@@ -58,7 +58,7 @@ const ChatWindow = () => {
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
     const messageData = {
-      senderId: user._id,
+      senderId: (user as any)._id ,
       content: text,
       conversationId: selectedConversation._id,
     };
