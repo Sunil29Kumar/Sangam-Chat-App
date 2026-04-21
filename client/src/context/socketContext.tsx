@@ -23,6 +23,7 @@ export default function SocketProvider({ children }: { children: React.ReactNode
             const newSocket = io(import.meta.env.VITE_SERVER_URL, {
                 query: { userId: user._id },
                 withCredentials: true,
+                transports: ["websocket" , "polling"], // Only use WebSocket transport
             });
 
             setSocket(newSocket);
