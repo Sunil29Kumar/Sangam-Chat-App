@@ -115,8 +115,8 @@ export const login = async (req, res) => {
             httpOnly: true,
             signed: true,
             maxAge: duration,
-            sameSite: "none",
-            secure: true 
+            sameSite: "lax",
+            secure: fasle // abhi http hay is leya false  
         });
 
         // 3. Set session in DB
@@ -164,8 +164,8 @@ export const logout = async (req, res) => {
         res.clearCookie("sid", {
             httpOnly: true,
             signed: true,
-            sameSite: "none",
-            secure: true
+            sameSite: "lax",
+            secure: false
         });
 
 
