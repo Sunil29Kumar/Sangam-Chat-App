@@ -20,7 +20,7 @@ export default function SocketProvider({ children }: { children: React.ReactNode
 
     useEffect(() => {
         if (user) {
-            const newSocket = io(import.meta.env.VITE_SERVER_URL, {
+            const newSocket = io(import.meta.env.VITE_SOCKET_URL, {
                 query: { userId: (user as any)._id },
                 withCredentials: true,
                 transports: ["websocket" , "polling"], // Only use WebSocket transport
