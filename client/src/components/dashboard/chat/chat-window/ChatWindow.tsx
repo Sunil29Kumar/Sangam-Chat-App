@@ -5,8 +5,9 @@ import {useSocket} from "../../../../hooks/useSocket";
 import {AuthContext} from "../../../../context/AuthContext";
 import MessageInputContainer from "./MessageInputContainer";
 import MessageArea from "./MessageArea";
+import { BiLeftArrow } from "react-icons/bi";
 
-const ChatWindow = () => {
+const ChatWindow = ({windowWidth}: {windowWidth: number}) => {
   const chatContext = useContext(ChatContext);
   const authContext = useContext(AuthContext);
   const {socket} = useSocket();
@@ -23,6 +24,7 @@ const ChatWindow = () => {
     setMessages,
     setIsTyping,
     setTypingStatus,
+    setSelectedConversation
   } = chatContext;
 
   if (!authContext) return null;
@@ -100,7 +102,7 @@ const ChatWindow = () => {
 
   if (!selectedConversation) {
     return (
-      <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-slate-50/50">
+      <div className=" hidden md:flex h-screen flex-1 flex-col items-center justify-center bg-slate-50/50">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 bg-white rounded-[2.5rem] shadow-xl flex items-center justify-center mx-auto border border-slate-100">
             <MessageSquare size={32} className="text-indigo-600" />
@@ -115,10 +117,11 @@ const ChatWindow = () => {
   }
 
   return (
-    <div className=" flex-1 flex flex-col bg-white h-screen max-h-screen overflow-hidden">
+    <div className={`  flex flex-col bg-white h-screen max-h-screen overflow-hidden  `}>
       {/* --- Chat Header --- */}
       <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white/90 backdrop-blur-md z-20 shadow-sm">
         <div className="flex items-center gap-4">
+          <BiLeftArrow onClick={()=>setSelectedConversation(null)} size={20} className="text-slate-400 " />
           <div className="relative">
             <img
               src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedConversation?.otherParticipant?.name}`}

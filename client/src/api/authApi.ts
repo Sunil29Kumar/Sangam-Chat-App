@@ -39,7 +39,7 @@ export const signupAuth = async (
     return response.data;
   } catch (error: any) {
     return (
-      error?.response.data || {
+      error?.response?.data || {
         success: false,
         message: "An error occurred during signup.",
       }
@@ -80,7 +80,9 @@ export const logoutAuth = async () => {
 export const isAuthenticated = async () => {
   try {
     const response = await axios.get("/user");
-    return response.data;
+    console.log(response);
+    
+    return response?.data;
   } catch (error: any) {
     return (
       error?.response.data || {

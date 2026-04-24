@@ -42,6 +42,8 @@ export default function AuthProvider({children}: {children: React.ReactNode}) {
   const checkAuthentication = async () => {
     try {
       const data = await isAuthenticated();
+      console.log(data);
+      
       if (data?.success) {
         setIsAuth(true);
         setUser(data.user);
