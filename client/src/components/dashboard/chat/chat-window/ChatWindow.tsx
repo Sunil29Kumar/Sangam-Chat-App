@@ -5,14 +5,15 @@ import {useSocket} from "../../../../hooks/useSocket";
 import {AuthContext} from "../../../../context/AuthContext";
 import MessageInputContainer from "./MessageInputContainer";
 import MessageArea from "./MessageArea";
-import { BiLeftArrow } from "react-icons/bi";
+import {BiLeftArrow} from "react-icons/bi";
 
-const ChatWindow = ({windowWidth}: {windowWidth: number}) => {
+const ChatWindow = () => {
   const chatContext = useContext(ChatContext);
   const authContext = useContext(AuthContext);
   const {socket} = useSocket();
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
   let typingTimeout: any;
 
   if (!chatContext) return null;
@@ -24,7 +25,8 @@ const ChatWindow = ({windowWidth}: {windowWidth: number}) => {
     setMessages,
     setIsTyping,
     setTypingStatus,
-    setSelectedConversation
+    setSelectedConversation,
+    replyingData,
   } = chatContext;
 
   if (!authContext) return null;
@@ -60,9 +62,14 @@ const ChatWindow = ({windowWidth}: {windowWidth: number}) => {
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
     const messageData = {
-      senderId: (user as any)._id ,
+      senderId: (user as any)._id,
       content: text,
       conversationId: selectedConversation._id,
+      replyTo: {
+        messageId: replyingData?.replyToMessageId,
+        replayerId: replyingData?.messageSender._id,
+        content: replyingData?.replyToMessageText,
+      },
     };
     socket?.emit("send_message", messageData);
     setText("");
@@ -117,21 +124,27 @@ const ChatWindow = ({windowWidth}: {windowWidth: number}) => {
   }
 
   return (
-    <div className={`  flex flex-col bg-white h-screen max-h-screen overflow-hidden  `}>
-      {/* --- Chat Header --- */}
-      <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white/90 backdrop-blur-md z-20 shadow-sm">
-        <div className="flex items-center gap-4">
-          <BiLeftArrow onClick={()=>setSelectedConversation(null)} size={20} className="text-slate-400 " />
+    <div className="flex flex-col w-full h-full max-h-full overflow-hidden bg-[#fafafa]">
+      {/* Chat Header */}
+      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex justify-between items-center bg-white/90 backdrop-blur-md z-20 shadow-sm flex-shrink-0">
+        <div className="flex items-center gap-3 md:gap-4">
+          {/* Back button — sirf mobile pe dikhega */}
+          <button
+            onClick={() => setSelectedConversation(null)}
+            className="md:hidden p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+          >
+            <BiLeftArrow size={20} className="text-slate-500" />
+          </button>
           <div className="relative">
             <img
               src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedConversation?.otherParticipant?.name}`}
-              className="w-11 h-11 rounded-2xl bg-indigo-50 border-2 border-white shadow-sm object-cover"
+              className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-indigo-50 border-2 border-white shadow-sm object-cover"
               alt="avatar"
             />
-            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 md:w-3.5 md:h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
           </div>
           <div>
-            <h4 className="font-bold text-slate-900 leading-tight">
+            <h4 className="font-bold text-slate-900 leading-tight text-[15px]">
               {selectedConversation?.otherParticipant?.name}
             </h4>
             <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest mt-0.5">
@@ -141,22 +154,25 @@ const ChatWindow = ({windowWidth}: {windowWidth: number}) => {
         </div>
         <div className="flex items-center gap-1">
           <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
-            <Phone size={19} />
+            <Phone size={18} />
           </button>
           <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
-            <Video size={19} />
+            <Video size={18} />
           </button>
           <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
-            <MoreVertical size={19} />
+            <MoreVertical size={18} />
           </button>
         </div>
       </div>
 
-      {/* --- Messages Area --- */}
-      <MessageArea scrollRef={scrollRef as React.RefObject<HTMLDivElement>} messages={messages} user={user} />
+      {/* Messages Area */}
+      <MessageArea
+        scrollRef={scrollRef as React.RefObject<HTMLDivElement>}
+        messages={messages}
+        user={user}
+      />
 
-      {/* --- Message Input Container --- */}
-
+      {/* Input Container */}
       <MessageInputContainer
         text={text}
         setText={setText}

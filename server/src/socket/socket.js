@@ -37,7 +37,7 @@ export const socket = (server) => {
         });
 
         // 2. Send & Save Message
-        socket.on("send_message", async ({ senderId, content, conversationId }) => {
+        socket.on("send_message", async ({ senderId, content, conversationId, replyTo }) => {
             try {
                 if (!content || !conversationId) return;
 
@@ -53,12 +53,20 @@ export const socket = (server) => {
                 }
 
                 // if sender is part of conversation , push message to message model (in content)
+                console.log(replyTo);
 
                 // Database mein message save karein
                 const newMessage = new Message({
                     sender: senderId,
                     content: content,
-                    conversationId: conversationId
+                    conversationId: conversationId,
+                    replyTo: (replyTo?.messageId && replyTo?.replayerId && replyTo?.content) ?
+                        {
+                            messageId: replyTo?.messageId, 
+                            content: replyTo?.replyToMessageText, 
+                            senderId: replyTo.replayerId
+
+                        } : null
                 });
                 await newMessage.save();
 
@@ -71,8 +79,10 @@ export const socket = (server) => {
                     }
                 });
 
+                const populatedMsg = await newMessage.populate("sender", "name email profilePic");
+
                 // Room mein sabko (including sender) naya message bhejein
-                io.to(conversationId).emit("new_message", newMessage);
+                io.to(conversationId).emit("new_message", populatedMsg);
 
             } catch (error) {
                 console.error("❌ Socket Message Error:", error);

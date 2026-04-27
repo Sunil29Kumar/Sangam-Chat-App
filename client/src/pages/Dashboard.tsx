@@ -12,27 +12,41 @@ const Dashboard = () => {
   const {selectedConversation} = chatAuth;
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
+  // ✅ Fix: resize listener add kiya — warna width kabhi update nahi hogi
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     checkAuthentication();
   }, []);
 
+  const isMobile = windowWidth < 768;
+
   return (
     <div className="flex h-full w-full bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-white">
-      {/* LEFT SIDE: Master View */}
+      {/* LEFT: ChatList — mobile pe sirf tab dikhao jab koi conversation select NA ho */}
       <div
-        className={`${selectedConversation && windowWidth < 768 ? "hidden" : "block "} w-full md:w-80 lg:w-[380px]`}
+        className={`
+          ${isMobile && selectedConversation ? "hidden" : "flex"}
+          w-full md:w-80 lg:w-[380px] flex-shrink-0
+        `}
       >
         <ChatList setIsNewChatModalOpen={setIsNewChatModalOpen} />
       </div>
 
-      {/* RIGHT SIDE: Detail View */}
+      {/* RIGHT: ChatWindow — mobile pe sirf tab dikhao jab conversation select HO */}
       <div
-        className={`${selectedConversation && windowWidth < 768 ? "block" : "hidden"} md:block flex-1  `}
+        className={`
+          ${isMobile && !selectedConversation ? "hidden" : "flex"}
+          flex-1 min-w-0
+        `}
       >
-        <ChatWindow windowWidth={windowWidth} />
+        <ChatWindow />
       </div>
 
-      {/* MODALS */}
       {isNewChatModalOpen && (
         <NewChatModal setIsNewChatModalOpen={setIsNewChatModalOpen} />
       )}

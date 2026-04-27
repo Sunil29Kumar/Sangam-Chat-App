@@ -16,6 +16,10 @@ interface ChatContextType {
   setIsTyping: (typing: boolean) => void;
   typingStatus: string;
   setTypingStatus: (status: string) => void;
+  replyingData: any;
+  setReplyingData: (data: any) => void;
+  isReplyContainerOpen: boolean;
+  setIsReplyContainerOpen: (value: boolean) => void;
 
   // function
   getConversations: () => Promise<any>;
@@ -25,15 +29,22 @@ interface ChatContextType {
 export const ChatContext = createContext<ChatContextType | null>(null);
 
 export default function ChatProvider({children}: {children: React.ReactNode}) {
-
   const [conversations, setConversations] = useState<any[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
 
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-    const [isTyping, setIsTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [typingStatus, setTypingStatus] = useState("");
+
+  const [replyingData, setReplyingData] = useState({
+    messageSender: { },
+    replyToMessageId: "",
+    replyToMessageText: "",
+    conversationId: "",
+  });
+  const [isReplyContainerOpen, setIsReplyContainerOpen] = useState(false);
 
   const getConversations = async () => {
     setLoading(true);
@@ -58,7 +69,6 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
     getConversations();
   }, []);
 
-
   const getMessages = async (conversationId: string) => {
     try {
       const response = await getMessagesAuth(conversationId);
@@ -73,7 +83,28 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
   };
 
   return (
-    <ChatContext.Provider value={{conversations, getConversations , setConversations, selectedConversation, setSelectedConversation, getMessages , messages, setMessages, loading, setLoading , isTyping, setIsTyping, typingStatus, setTypingStatus}}>
+    <ChatContext.Provider
+      value={{
+        conversations,
+        getConversations,
+        setConversations,
+        selectedConversation,
+        setSelectedConversation,
+        getMessages,
+        messages,
+        setMessages,
+        loading,
+        setLoading,
+        isTyping,
+        setIsTyping,
+        typingStatus,
+        setTypingStatus,
+        replyingData,
+        setReplyingData,
+        isReplyContainerOpen,
+        setIsReplyContainerOpen,
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );

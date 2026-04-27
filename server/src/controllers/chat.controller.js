@@ -34,9 +34,6 @@ export const createConversation = async (req, res) => {
         const { recipientId } = req.body;
         const senderId = req.user._id;
 
-        console.log(recipientId);
-
-
         // Check if a conversation already exists between the sender and recipient
         let conversation = await Conversation.findOne({
             type: 'dm',
@@ -85,7 +82,7 @@ export const getConversations = async (req, res) => {
 export const getMessages = async (req, res) => {
     try {
         const { conversationId } = req.params;
-        const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
+        const messages = await Message.find({ conversationId }).sort({ createdAt: 1 }).populate("sender", "name email profilePic");
         return res.status(200).json({ success: true, messages });
     } catch (error) {
         return res.status(500).json({ message: "Error fetching messages", success: false });
@@ -93,13 +90,25 @@ export const getMessages = async (req, res) => {
 };
 
 
-export const deleteMessage = async (req, res) => {
+export const deleteMessageFromEveryone = async (req, res) => {
     try {
         const { message } = req.chatContext;
         await Message.findByIdAndDelete(message._id);
-        
+
         return res.status(200).json({ message: "Message deleted successfully", success: true });
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error", success: false, error : error.message });
+        return res.status(500).json({ message: "Internal server error", success: false, error: error.message });
+    }
+}
+
+export const deleteMessageForMe = async (req, res) => {
+    try {
+        const { message } = req.chatContext;
+        const userId = req.user._id;
+        await Message.findByIdAndUpdate(message._id, { $push: { deletedBy: userId } });
+        
+        return res.status(200).json({ message: "Message deleted for you", success: true });
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error", success: false, error: error.message });
     }
 }

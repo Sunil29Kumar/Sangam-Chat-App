@@ -41,6 +41,7 @@ export const chatGuard = (options = { checkSender: false }) => {
             // 5. Success: Data ko req object mein daal do taaki controller use kar sake
             req.chatContext = { message, conversation };
             next();
+            
         } catch (error) {
             return res.status(500).json({ message: "Internal server error", success: false , error: error.message });
         }

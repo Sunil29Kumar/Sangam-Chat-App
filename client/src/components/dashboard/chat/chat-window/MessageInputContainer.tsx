@@ -1,5 +1,7 @@
-import {Send, Smile} from "lucide-react";
-import React from "react";
+import {ClosedCaption, CrossIcon, Send, Smile} from "lucide-react";
+import React, {useContext} from "react";
+import {IoMdClose} from "react-icons/io";
+import {ChatContext} from "../../../../context/ChatContext";
 
 function MessageInputContainer({
   text,
@@ -12,14 +14,37 @@ function MessageInputContainer({
   handleSendMessage: () => void;
   handleTyping: () => void;
 }) {
+  const chatContext = useContext(ChatContext);
+  if (!chatContext) return null;
+  const {isReplyContainerOpen, setIsReplyContainerOpen ,replyingData} = chatContext;
+
   return (
-    <div className="  px-6 bg-white border-t border-slate-50 pt-3 pb-11">
+    <div className=" px-3 py-3 flex-shrink-0  ">
       {/* --- Message Input Container --- */}
-      <div className="px-6  bg-white border-t border-slate-50 py-1">
-        <div className="max-w-4xl mx-auto flex items-center gap-3 bg-slate-100/80 p-1.5 pl-4 rounded-[1.8rem] focus-within:ring-4 focus-within:ring-indigo-500/5 focus-within:bg-white focus-within:border-indigo-100 border-2 border-transparent transition-all shadow-inner">
+
+      <div className=" bg-white py-2 px-3 rounded-[1.8rem] border-2 border-slate-50 flex flex-col gap-2 ">
+        {/* reply container  */}
+        {isReplyContainerOpen && (
+          <div className=" flex justify-between px-3 py-2 bg-gray-100 rounded-md ">
+            <p>
+              <span>{replyingData?.messageSender?.name || "You"}</span>
+              <h3>{replyingData?.replyToMessageText.length > 150 ? replyingData?.replyToMessageText.substring(0, 150) + "..." : replyingData?.replyToMessageText}</h3>
+            </p>
+            <IoMdClose
+              onClick={() => setIsReplyContainerOpen(false)}
+              className=" cursor-pointer "
+            />
+          </div>
+        )}
+
+        {/* input container  */}
+        <div className=" flex items-center gap-3  ">
+          {/* react  */}
           <button className="text-slate-400 hover:text-indigo-500 p-2 transition-colors">
             <Smile size={22} />
           </button>
+
+          {/* input  */}
           <input
             type="text"
             value={text}
@@ -31,6 +56,8 @@ function MessageInputContainer({
             placeholder="Type a message..."
             className="flex-1 bg-transparent border-none outline-none text-[15px] font-semibold text-slate-700 py-2.5 placeholder:text-slate-400"
           />
+
+          {/* submit   */}
           <button
             onClick={handleSendMessage}
             disabled={!text.trim()}
@@ -47,11 +74,6 @@ function MessageInputContainer({
             />
           </button>
         </div>
-
-        {/* Helper text for safety */}
-        <p className="text-center text-[9px] text-slate-400 mt-2 font-bold uppercase tracking-[0.1em]">
-          Press Enter to send
-        </p>
       </div>
     </div>
   );

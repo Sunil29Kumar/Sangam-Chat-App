@@ -1,15 +1,19 @@
-import { useState } from "react";
+import {useContext, useState} from "react";
 import {
   createConversationAuth,
   deleteMessageFromEveryoneAuth,
-  
+  deleteMessageFromMeAuth,
   searchUserAuth,
 } from "../api/chatApi";
 import {showToast} from "../utils/toast";
+import {ChatContext} from "../context/ChatContext";
 
 export const useChat = () => {
-  //   const {} = useContext(ChatContext);
+  const chatContext = useContext(ChatContext);
   const [loading, setLoading] = useState(false);
+
+  if (!chatContext) return null;
+  const {getMessages} = chatContext;
 
   const searchUser = async (query: string) => {
     setLoading(true);
@@ -51,9 +55,12 @@ export const useChat = () => {
         conversationId,
         messageId,
       );
-      console.log(response);
-      if(response?.success) showToast.success(response.message);
-      else showToast.error(response?.message || "Failed to delete message for everyone.");
+      getMessages(conversationId);
+      if (response?.success) showToast.success(response.message);
+      else
+        showToast.error(
+          response?.message || "Failed to delete message for everyone.",
+        );
       return response;
     } catch (error: string | any) {
       showToast.error(
@@ -66,10 +73,31 @@ export const useChat = () => {
     }
   };
 
+  const deleteMessageForMe = async (
+    conversationId: string,
+    messageId: string,
+  ) => {
+    try {
+      const response = await deleteMessageFromMeAuth(conversationId, messageId);
+      getMessages(conversationId);
+      if (response?.success) showToast.success(response.message);
+      else
+        showToast.error(
+          response?.message || "Failed to delete message for me.",
+        );
+    } catch (error: string | any) {
+      showToast.error(
+        error?.message || "An error occurred while deleting message for me.",
+      );
+      return null;
+    }
+  };
+
   return {
     searchUser,
     createConversation,
     deleteMessageFromEveryone,
+    deleteMessageForMe,
     loading,
   };
 };

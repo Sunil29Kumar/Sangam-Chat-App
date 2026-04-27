@@ -60,9 +60,14 @@ export const getMessagesAuth = async (conversationId: string) => {
   }
 };
 
-
-export const deleteMessageFromEveryoneAuth = async (conversationId: string, messageId: string) => {
-  try {    const response = await axios.delete(`/chat/conversations/${conversationId}/messages/${messageId}/delete_for_everyone`);
+export const deleteMessageFromEveryoneAuth = async (
+  conversationId: string,
+  messageId: string,
+) => {
+  try {
+    const response = await axios.delete(
+      `/chat/conversations/${conversationId}/messages/${messageId}/delete_for_everyone`,
+    );
     return response.data;
   } catch (error: any) {
     return (
@@ -72,4 +77,23 @@ export const deleteMessageFromEveryoneAuth = async (conversationId: string, mess
       }
     );
   }
-}
+};
+
+export const deleteMessageFromMeAuth = async (
+  conversationId: string,
+  messageId: string,
+) => {
+  try {
+    const response = await axios.delete(
+      `/chat/conversations/${conversationId}/messages/${messageId}/delete_for_me`,
+    );
+    return response.data;
+  } catch (error: any) {
+    return (
+      error?.response.data || {
+        success: false,
+        message: "An error occurred while deleting message for me.",
+      }
+    );
+  }
+};
