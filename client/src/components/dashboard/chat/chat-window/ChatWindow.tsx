@@ -27,6 +27,7 @@ const ChatWindow = () => {
     setTypingStatus,
     setSelectedConversation,
     replyingData,
+    setIsReplyContainerOpen
   } = chatContext;
 
   if (!authContext) return null;
@@ -73,6 +74,7 @@ const ChatWindow = () => {
     };
     socket?.emit("send_message", messageData);
     setText("");
+    setIsReplyContainerOpen(false);
   };
 
   // handle Typing status

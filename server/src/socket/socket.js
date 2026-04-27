@@ -63,8 +63,8 @@ export const socket = (server) => {
                     replyTo: (replyTo?.messageId && replyTo?.replayerId && replyTo?.content) ?
                         {
                             messageId: replyTo?.messageId, 
-                            content: replyTo?.replyToMessageText, 
-                            senderId: replyTo.replayerId
+                            replayerId: replyTo?.replayerId,
+                            content: replyTo?.content, 
 
                         } : null
                 });

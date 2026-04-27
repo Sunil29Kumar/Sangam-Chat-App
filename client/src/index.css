@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* index.css mein ye add karein */
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
