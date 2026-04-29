@@ -5,7 +5,7 @@ import {showToast} from "../utils/toast";
 interface ChatContextType {
   // state
   conversations: any[];
-  setConversations: (conversations: any[]) => void;
+  setConversations: React.Dispatch<React.SetStateAction<any[]>>;
   selectedConversation: any | null;
   setSelectedConversation: (conversation: any | null) => void;
   messages: any[];
@@ -24,6 +24,7 @@ interface ChatContextType {
   // function
   getConversations: () => Promise<any>;
   getMessages: (conversationId: string) => Promise<any>;
+  updateLastMessageInList: (message: any) => void;
 }
 
 export const ChatContext = createContext<ChatContextType | null>(null);
@@ -39,7 +40,7 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
   const [typingStatus, setTypingStatus] = useState("");
 
   const [replyingData, setReplyingData] = useState({
-    messageSender: { },
+    messageSender: {},
     replyToMessageId: "",
     replyToMessageText: "",
     conversationId: "",
@@ -51,7 +52,6 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
 
     try {
       const response = await getConversationsAuth();
-      // console.log(response.conversations);
 
       if (response.success) {
         setConversations(response.conversations);
@@ -65,9 +65,6 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
     }
   };
 
-  useEffect(() => {
-    getConversations();
-  }, []);
 
   const getMessages = async (conversationId: string) => {
     try {
@@ -80,6 +77,27 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
         error?.message || "An error occurred while fetching messages.",
       );
     }
+  };
+
+  // ChatProvider ke andar
+  const updateLastMessageInList = (message : any) => {
+    setConversations((prevConversations) => {
+      return prevConversations.map((conv) => {
+        if (conv._id === message.conversationId) {
+          return {
+            ...conv,
+            lastMessage: {
+              text: message.content,
+              sender: message.sender._id || message.sender,
+              isDelivered: message.isDelivered || false,
+              isRead: message.isRead || false,
+              createdAt: message.createdAt || new Date(),
+            },
+          };
+        }
+        return conv;
+      });
+    });
   };
 
   return (
@@ -103,6 +121,7 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
         setReplyingData,
         isReplyContainerOpen,
         setIsReplyContainerOpen,
+        updateLastMessageInList,
       }}
     >
       {children}

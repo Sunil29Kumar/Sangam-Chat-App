@@ -27,38 +27,14 @@ const ChatWindow = () => {
     setTypingStatus,
     setSelectedConversation,
     replyingData,
-    setIsReplyContainerOpen
+    setIsReplyContainerOpen,
+    getConversations,
+    updateLastMessageInList,
+    setConversations,
   } = chatContext;
 
   if (!authContext) return null;
   const {user} = authContext;
-
-  // Selected conversation change hone pe messages fetch karne hai
-  useEffect(() => {
-    if (selectedConversation?._id) {
-      getMessages(selectedConversation._id);
-    }
-  }, [selectedConversation?._id]);
-
-  // Socket se new message receive hone pe messages update karne hai
-  useEffect(() => {
-    if (!socket) return;
-    socket.on("new_message", (message: any) => {
-      if (message.conversationId === selectedConversation?._id) {
-        setMessages((prev) => [...prev, message]);
-      }
-    });
-    return () => {
-      socket.off("new_message");
-    };
-  }, [socket, selectedConversation?._id, setMessages]);
-
-  // Messages update hone pe scroll karna hai
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
@@ -73,8 +49,17 @@ const ChatWindow = () => {
       },
     };
     socket?.emit("send_message", messageData);
+
+    updateLastMessageInList({
+      content: text,
+      conversationId: selectedConversation._id,
+      sender: user._id,
+      isDelivered: false,
+    });
+
     setText("");
     setIsReplyContainerOpen(false);
+    // getConversations(); // Conversations update karne hai taki last message aur uska status update ho jaye
   };
 
   // handle Typing status
@@ -91,6 +76,117 @@ const ChatWindow = () => {
     }, 2000);
   };
 
+  // Selected conversation change hone pe messages fetch karne hai
+  useEffect(() => {
+    if (selectedConversation?._id) {
+      getMessages(selectedConversation._id);
+    }
+  }, [selectedConversation?._id]);
+
+  // Socket se new message receive hone pe messages update karne hai
+  useEffect(() => {
+    if (!socket) return;
+
+    // New message receive hone pe ( Receiver ke liye )
+    socket.on("new_message", (message: any) => {
+      if (message.conversationId === selectedConversation?._id) {
+        setMessages((prev) => [...prev, message]);
+
+        socket.emit("mark_as_read", {
+          conversationId: selectedConversation._id,
+          userId: (user as any)?._id,
+        });
+      }
+
+      // send confirmation
+      updateLastMessageInList(message);
+      if (message.sender?._id !== (user as any)._id) {
+        socket.emit("message_delivered", {
+          messageId: message._id,
+          senderId: message.sender._id,
+        });
+      }
+    });
+
+    // message status update hone pe (delivered ya read)
+    socket.on(
+      "message_status_update",
+      ({messageId, status, conversationId}) => {
+        if (conversationId === selectedConversation?._id) {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg._id === messageId
+                ? {
+                    ...msg,
+                    isDelivered:
+                      status === "delivered" ? true : msg.isDelivered,
+                  }
+                : msg,
+            ),
+          );
+
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv._id === conversationId
+                ? {
+                    ...conv,
+                    lastMessage: {
+                      ...conv.lastMessage,
+                      isDelivered:
+                        status === "delivered"
+                          ? true
+                          : conv.lastMessage.isDelivered,
+                      isRead:
+                        status === "read" ? true : conv.lastMessage.isRead,
+                    },
+                  }
+                : conv,
+            ),
+          );
+        }
+      },
+    );
+
+    return () => {
+      socket.off("new_message");
+      socket.off("message_status_update");
+    };
+  }, [socket, selectedConversation?._id, setMessages, updateLastMessageInList]);
+
+  useEffect(() => {
+    // Listener for blue tick
+    socket.on("messages_marked_as_read", ({conversationId, readBy}) => {
+      if (selectedConversation?._id === conversationId) {
+        // 1. Chat Window ke saare messages ko UI mein read dikhao
+        setMessages((prev) =>
+          prev.map((m) => ({
+            ...m,
+            isRead: true,
+            readedBy: [...m.readedBy, readBy],
+          })),
+        );
+
+        // 2. Conversations list mein bhi last message ke read status ko update karo
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv._id === conversationId
+              ? {
+                  ...conv,
+                  lastMessage: {
+                    ...conv.lastMessage,
+                    isRead: true,
+                  },
+                }
+              : conv,
+          ),
+        );
+      }
+    });
+    return () => {
+      socket.off("messages_marked_as_read");
+    };
+  }, [socket, selectedConversation?._id, setMessages, setConversations]);
+
   // 2. Listen for Typing Status (useEffect mein)
   useEffect(() => {
     socket?.on("display_typing", (data) => {
@@ -106,8 +202,28 @@ const ChatWindow = () => {
     return () => {
       socket?.off("display_typing");
       socket?.off("hide_typing");
+      // socket?.off("messages_marked_as_read");
     };
   }, [socket]);
+
+  // Conversation select hone pe uske messages fetch karne hai aur us conversation ke messages read mark karne hai
+  useEffect(() => {
+    if (selectedConversation?._id) {
+      getMessages(selectedConversation._id);
+
+      socket.emit("mark_as_read", {
+        conversationId: selectedConversation._id,
+        userId: (user as any)?._id,
+      });
+    }
+  }, [selectedConversation?._id, socket, (user as any)?._id]);
+
+  // Messages update hone pe scroll karna hai
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   if (!selectedConversation) {
     return (
