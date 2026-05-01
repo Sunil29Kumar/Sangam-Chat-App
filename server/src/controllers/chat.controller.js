@@ -66,7 +66,7 @@ export const getConversations = async (req, res) => {
         const userId = req.user._id;
         const conversations = await Conversation.find({
             participants: userId
-        }).populate("participants", "name email conversations isOnline profilePic").sort({ updatedAt: -1 });
+        }).populate("participants", "name email conversations isOnline lastSeen profilePic").sort({ updatedAt: -1 });
 
         const formattedConversations = conversations.map(conv => {
             const otherParticipant = conv.participants.find(p => p._id.toString() !== userId.toString());

@@ -31,7 +31,6 @@ export default function SocketProvider({ children }: { children: React.ReactNode
             // Online users track karne ke liye (Backend se aayega)
             newSocket.on("get_online_users", (users) => {
                 console.log("user", users);
-                
                 setOnlineUsers(users);
             });
 

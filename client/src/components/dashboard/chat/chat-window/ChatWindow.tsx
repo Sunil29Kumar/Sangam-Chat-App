@@ -6,7 +6,8 @@ import {AuthContext} from "../../../../context/AuthContext";
 import MessageInputContainer from "./MessageInputContainer";
 import MessageArea from "./MessageArea";
 import {BiLeftArrow} from "react-icons/bi";
-import { socketContext } from "../../../../context/socketContext";
+import {socketContext} from "../../../../context/socketContext";
+import {formatTime} from "../../../../utils/formatTime";
 
 const ChatWindow = () => {
   const chatContext = useContext(ChatContext);
@@ -17,11 +18,7 @@ const ChatWindow = () => {
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-
-  console.log("online user ",onlineUsers);
-
-  
-  
+  console.log("online user ", onlineUsers);
 
   let typingTimeout: any;
 
@@ -45,9 +42,8 @@ const ChatWindow = () => {
   if (!authContext) return null;
   const {user} = authContext;
 
-    console.log("messages =", messages);
-    console.log("selectedconversition =", selectedConversation);
-    
+  console.log("messages =", messages);
+  console.log("selectedconversition =", selectedConversation);
 
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
@@ -88,13 +84,6 @@ const ChatWindow = () => {
       socket?.emit("stop_typing", {conversationId: selectedConversation._id});
     }, 2000);
   };
-
-  // Selected conversation change hone pe messages fetch karne hai
-  useEffect(() => {
-    if (selectedConversation?._id) {
-      getMessages(selectedConversation._id);
-    }
-  }, [selectedConversation?._id]);
 
   // Socket se new message receive hone pe messages update karne hai
   useEffect(() => {
@@ -214,9 +203,15 @@ const ChatWindow = () => {
     return () => {
       socket?.off("display_typing");
       socket?.off("hide_typing");
-      // socket?.off("messages_marked_as_read");
     };
   }, [socket]);
+
+  // // Selected conversation change hone pe messages fetch karne hai
+  // useEffect(() => {
+  //   if (selectedConversation?._id) {
+  //     getMessages(selectedConversation._id);
+  //   }
+  // }, [selectedConversation?._id]);
 
   // Conversation select hone pe uske messages fetch karne hai aur us conversation ke messages read mark karne hai
   useEffect(() => {
@@ -277,7 +272,22 @@ const ChatWindow = () => {
             <h4 className="font-bold text-slate-900 leading-tight text-[15px]">
               {selectedConversation?.otherParticipant?.name}
             </h4>
-       {onlineUsers?.includes(selectedConversation?.otherParticipant?._id) ? <span className="text-green-500">Online</span> : <span className="text-slate-400">Offline</span>}
+
+            {onlineUsers?.includes(
+              selectedConversation?.otherParticipant?._id,
+            ) ? (
+              <span className="text-green-500">Online</span>
+            ) : (
+              <p className="text-slate-400">
+                Offline{" "}
+                {selectedConversation?.otherParticipant?.lastSeen && (
+                  <span className=" text-[10px] ">
+                    {" "}
+                    {`Last seen ${formatTime(selectedConversation.otherParticipant.lastSeen)}`}
+                  </span>
+                )}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1">

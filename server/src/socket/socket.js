@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import dotenv from "dotenv";
+import User from "../models/user.model.js";
 
 dotenv.config();
 
@@ -33,7 +34,7 @@ export const socket = (server) => {
         // 1. Join Chat Room
         socket.on("join_chat", (conversationId) => {
             socket.join(conversationId);
-            console.log(`📁 Room Joined: ${conversationId} by User: ${userId}`);
+            console.log(`📁 Room Joined: convrsation Id: ${conversationId} by User: ${userId}`);
         });
 
         // 2. Send & Save Message
@@ -167,12 +168,27 @@ export const socket = (server) => {
 
 
         // 4. Disconnect
-        socket.on("disconnect", () => {
-            if (userId) {
+        socket.on("disconnect", async () => {
+            if (userId && userId !== "undefined") {
                 console.log(`❌ User Disconnected: ${userId}`);
-                delete userSocketMap[userId];
+
+                // if (userSocketMap[userId] === socket.id) {
+                    delete userSocketMap[userId];
+                // }
+                io.emit("get_online_users", Object.keys(userSocketMap));
+                
+
+                try {
+
+                    // update user model lastSeen 
+                    await User.findByIdAndUpdate(userId, { lastSeen: new Date() }, { new: true });
+
+
+                } catch (error) {
+                    console.log("Error updating last seen:", error);
+                }
+
             }
-            io.emit("get_online_users", Object.keys(userSocketMap));
         });
     });
 
