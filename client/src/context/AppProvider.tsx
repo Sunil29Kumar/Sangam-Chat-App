@@ -1,6 +1,6 @@
 import AuthProvider from "./AuthContext";
 import ChatProvider from "./ChatContext";
-import SocketProvider from "./socketContext";
+import SocketProvider from "./SocketContext";
 
 export function AppProvider({children }: {children: React.ReactNode}) {
   return (

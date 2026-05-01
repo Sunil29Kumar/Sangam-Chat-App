@@ -6,44 +6,49 @@ import {AuthContext} from "../../../../context/AuthContext";
 import MessageInputContainer from "./MessageInputContainer";
 import MessageArea from "./MessageArea";
 import {BiLeftArrow} from "react-icons/bi";
-import {socketContext} from "../../../../context/socketContext";
+
 import {formatTime} from "../../../../utils/formatTime";
+import {SocketContext} from "../../../../context/SocketContext";
 
 const ChatWindow = () => {
   const chatContext = useContext(ChatContext);
   const authContext = useContext(AuthContext);
-  const {onlineUsers} = useContext(socketContext);
-  const {socket} = useSocket();
+  const socketContext = useContext(SocketContext);
+  const {
+    socket,
+    handleNewMessage,
+    handleMessageStatusUpdate,
+    handleMessageMarkedAsRead,
+    handleDisplayTyping,
+    handleHideTyping,
+  } = useSocket();
 
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  console.log("online user ", onlineUsers);
-
   let typingTimeout: any;
 
-  if (!chatContext) return null;
+  if (!socketContext) return null;
+  const {onlineUsers} = socketContext;
 
+  if (!chatContext) return null;
   const {
     selectedConversation,
     getMessages,
     messages,
     setMessages,
-    setIsTyping,
-    setTypingStatus,
     setSelectedConversation,
     replyingData,
     setIsReplyContainerOpen,
-    getConversations,
     updateLastMessageInList,
-    setConversations,
   } = chatContext;
 
   if (!authContext) return null;
   const {user} = authContext;
 
-  console.log("messages =", messages);
-  console.log("selectedconversition =", selectedConversation);
+  // console.log("online user ", onlineUsers);
+  // console.log("messages =", messages);
+  // console.log("selectedconversition =", selectedConversation);
 
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
@@ -68,7 +73,6 @@ const ChatWindow = () => {
 
     setText("");
     setIsReplyContainerOpen(false);
-    // getConversations(); // Conversations update karne hai taki last message aur uska status update ho jaye
   };
 
   // handle Typing status
@@ -85,133 +89,40 @@ const ChatWindow = () => {
     }, 2000);
   };
 
-  // Socket se new message receive hone pe messages update karne hai
   useEffect(() => {
     if (!socket) return;
 
     // New message receive hone pe ( Receiver ke liye )
-    socket.on("new_message", (message: any) => {
-      if (message.conversationId === selectedConversation?._id) {
-        setMessages((prev) => [...prev, message]);
-        socket.emit("mark_as_read", {
-          conversationId: selectedConversation._id,
-          userId: (user as any)?._id,
-        });
-      }
+    socket.on("new_message", handleNewMessage);
 
-      // send confirmation
-      updateLastMessageInList(message);
-      if (message.sender?._id !== (user as any)._id) {
-        socket.emit("message_delivered", {
-          messageId: message._id,
-          senderId: message.sender._id,
-        });
-      }
-    });
+    socket?.on("display_typing", handleDisplayTyping);
+    socket?.on("hide_typing", handleHideTyping);
 
     // message status update hone pe (delivered ya read)
-    socket.on(
-      "message_status_update",
-      ({messageId, status, conversationId}) => {
-        if (conversationId === selectedConversation?._id) {
-          setMessages((prevMessages) =>
-            prevMessages.map((msg) =>
-              msg._id === messageId
-                ? {
-                    ...msg,
-                    isDelivered:
-                      status === "delivered" ? true : msg.isDelivered,
-                  }
-                : msg,
-            ),
-          );
+    socket.on("message_status_update", handleMessageStatusUpdate);
 
-          setConversations((prev) =>
-            prev.map((conv) =>
-              conv._id === conversationId
-                ? {
-                    ...conv,
-                    lastMessage: {
-                      ...conv.lastMessage,
-                      isDelivered:
-                        status === "delivered"
-                          ? true
-                          : conv.lastMessage.isDelivered,
-                      isRead:
-                        status === "read" ? true : conv.lastMessage.isRead,
-                    },
-                  }
-                : conv,
-            ),
-          );
-        }
-      },
-    );
+    // Listener for blue tick
+    socket.on("messages_marked_as_read", handleMessageMarkedAsRead);
 
     return () => {
       socket.off("new_message");
-      socket.off("message_status_update");
-    };
-  }, [socket, selectedConversation?._id, setMessages, updateLastMessageInList]);
-
-  useEffect(() => {
-    // Listener for blue tick
-    socket.on("messages_marked_as_read", ({conversationId, readBy}) => {
-      if (selectedConversation?._id === conversationId) {
-        // 1. Chat Window ke saare messages ko UI mein read dikhao
-        setMessages((prev) =>
-          prev.map((m) => ({
-            ...m,
-            isRead: true,
-            readedBy: [...m.readedBy, readBy],
-          })),
-        );
-
-        // 2. Conversations list mein bhi last message ke read status ko update karo
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv._id === conversationId
-              ? {
-                  ...conv,
-                  lastMessage: {
-                    ...conv.lastMessage,
-                    isRead: true,
-                  },
-                }
-              : conv,
-          ),
-        );
-      }
-    });
-    return () => {
-      socket.off("messages_marked_as_read");
-    };
-  }, [socket, selectedConversation?._id, setMessages, setConversations]);
-
-  // 2. Listen for Typing Status (useEffect mein)
-  useEffect(() => {
-    socket?.on("display_typing", (data) => {
-      setIsTyping(true);
-      setTypingStatus(`${data.senderName} typing...`);
-    });
-
-    socket?.on("hide_typing", () => {
-      setIsTyping(false);
-      setTypingStatus("");
-    });
-
-    return () => {
       socket?.off("display_typing");
       socket?.off("hide_typing");
+      socket.off("message_status_update");
+      socket.off("messages_marked_as_read");
     };
-  }, [socket]);
-
-  // // Selected conversation change hone pe messages fetch karne hai
-  // useEffect(() => {
-  //   if (selectedConversation?._id) {
-  //     getMessages(selectedConversation._id);
-  //   }
-  // }, [selectedConversation?._id]);
+    
+  }, [
+    socket,
+    selectedConversation?._id,
+    setMessages,
+    updateLastMessageInList,
+    handleNewMessage,
+    handleMessageStatusUpdate,
+    handleMessageMarkedAsRead,
+    handleDisplayTyping,
+    handleHideTyping,
+  ]);
 
   // Conversation select hone pe uske messages fetch karne hai aur us conversation ke messages read mark karne hai
   useEffect(() => {
@@ -223,7 +134,8 @@ const ChatWindow = () => {
         userId: (user as any)?._id,
       });
     }
-  }, [selectedConversation?._id, socket, (user as any)?._id]);
+    
+  }, [selectedConversation?._id, socket, user, getMessages]);
 
   // Messages update hone pe scroll karna hai
   useEffect(() => {
@@ -308,6 +220,7 @@ const ChatWindow = () => {
         scrollRef={scrollRef as React.RefObject<HTMLDivElement>}
         messages={messages}
         user={user}
+        selectedConversation={selectedConversation}
       />
 
       {/* Input Container */}

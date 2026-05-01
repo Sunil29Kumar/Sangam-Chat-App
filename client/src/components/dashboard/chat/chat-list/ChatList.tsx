@@ -42,7 +42,7 @@ const ChatList = ({
 
   const [searchQuery, setSearchQuery] = useState("");
   const {joinRoom, socket} = useSocket();
-  console.log("conversition = " ,conversations);
+  // console.log("conversition = " ,conversations);
   
 
   // Filter conversations based on search
@@ -59,7 +59,7 @@ const ChatList = ({
     if (!socket) return;
 
     // Jab naya message aaye (Text update karne ke liye)
-    socket.on("new_message", (message) => {
+    socket.on("new_message", (message: any) => {
       if (message.conversationId === selectedConversation?._id) {
         updateLastMessageInList(message);
         socket.emit("mark_as_read", {
@@ -69,31 +69,11 @@ const ChatList = ({
       }
     });
 
-    // socket.on(
-    //   "message_status_update",
-    //   ({messageId, status, conversationId}) => {
-    //     setConversations((prev) =>
-    //       prev.map((conv) =>
-    //         conv._id === conversationId
-    //           ? {
-    //               ...conv,
-    //               lastMessage: {
-    //                 ...conv.lastMessage,
-    //                 isDelivered: status === "delivered",
-    //                 isRead: status === "read",
-    //               },
-    //             }
-    //           : conv,
-    //       ),
-    //     );
-    //   },
-    // );
-
     return () => {
       socket.off("new_message");
       socket.off("message_status_update");
     };
-  }, [socket, updateLastMessageInList, setConversations]);
+  }, [socket, updateLastMessageInList, setConversations , selectedConversation, user]);
 
   useEffect(() => {
     getConversations();

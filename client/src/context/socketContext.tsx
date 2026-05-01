@@ -1,53 +1,57 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { AuthContext } from "./AuthContext";
-import { io, Socket } from "socket.io-client";
+import {createContext, useContext, useEffect, useState} from "react";
+import {AuthContext} from "./AuthContext";
+import {io, Socket} from "socket.io-client";
 
 interface socketContextType {
-    socket: Socket | null;
-    onlineUsers: string[];
+  socket: Socket | null;
+  onlineUsers: string[];
 }
 
-export const socketContext = createContext<socketContextType | null>(null);
+export const SocketContext = createContext<socketContextType | null>(null);
 
-export default function SocketProvider({ children }: { children: React.ReactNode }) {
-    
-    const authContext = useContext(AuthContext);
-    const [socket, setSocket] = useState<Socket | null>(null);
-    const [onlineUsers, setOnlineUsers] = useState([]);
+export default function SocketProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const authContext = useContext(AuthContext);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
-    if (!authContext) return null;
-    const { user } = authContext;
+  if (!authContext) return null;
+  const {user} = authContext;
 
-    useEffect(() => {
-        if (user) {
-            const newSocket = io(import.meta.env.VITE_SOCKET_URL, {
-                query: { userId: (user as any)._id },
-                withCredentials: true,
-                transports: ["websocket" , "polling"], // Only use WebSocket transport
-            });
+  // get online users
+  useEffect(() => {
+    if (user) {
+      const newSocket = io(import.meta.env.VITE_SOCKET_URL, {
+        query: {userId: (user as any)._id},
+        withCredentials: true,
+        transports: ["websocket", "polling"], // Only use WebSocket transport
+      });
 
-            setSocket(newSocket);
+      setSocket(newSocket);
 
-            // Online users track karne ke liye (Backend se aayega)
-            newSocket.on("get_online_users", (users) => {
-                console.log("user", users);
-                setOnlineUsers(users);
-            });
+      // Online users track karne ke liye (Backend se aayega)
+      newSocket.on("get_online_users", (users) => {
+        console.log("online users", users);
+        setOnlineUsers(users);
+      });
 
-            return () => {
-                newSocket.close(); // Clean up on logout
-            };
-        } else {
-            if (socket) {
-                socket.close();
-                setSocket(null);
-            }
-        }
-    }, [user]);
+      return () => {
+        newSocket.close(); 
+      };
+    } else {
+      if (socket) {
+        socket.close();
+        setSocket(null);
+      }
+    }
+  }, [user]);
 
-    return (
-        <socketContext.Provider value={{ socket, onlineUsers }}>
-            {children}
-        </socketContext.Provider>
-    );
+  return (
+    <SocketContext.Provider value={{socket, onlineUsers}}>
+      {children}
+    </SocketContext.Provider>
+  );
 }

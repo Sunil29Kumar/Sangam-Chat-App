@@ -19,10 +19,12 @@ function MessageArea({
   scrollRef,
   messages,
   user,
+  selectedConversation,
 }: {
   scrollRef: React.RefObject<HTMLDivElement>;
   messages: any[];
   user: any;
+  selectedConversation: any;
 }) {
   const {deleteMessageFromEveryone, deleteMessageForMe} = useChat();
   const chatContext = useContext(ChatContext);
@@ -88,6 +90,7 @@ function MessageArea({
     }
   };
 
+  // Click outside to close menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -97,6 +100,8 @@ function MessageArea({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  
 
   return (
     <div
