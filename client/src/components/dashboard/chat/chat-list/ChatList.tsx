@@ -42,6 +42,8 @@ const ChatList = ({
 
   const [searchQuery, setSearchQuery] = useState("");
   const {joinRoom, socket} = useSocket();
+  console.log("conversition = " ,conversations);
+  
 
   // Filter conversations based on search
   const filteredConversations = conversations?.filter((c: any) =>
@@ -58,32 +60,34 @@ const ChatList = ({
 
     // Jab naya message aaye (Text update karne ke liye)
     socket.on("new_message", (message) => {
-      updateLastMessageInList(message);
-      socket.emit("mark_as_read", {
-        conversationId: selectedConversation._id,
-        userId: (user as any)?._id,
-      });
+      if (message.conversationId === selectedConversation?._id) {
+        updateLastMessageInList(message);
+        socket.emit("mark_as_read", {
+          conversationId: selectedConversation._id,
+          userId: (user as any)?._id,
+        });
+      }
     });
 
-    socket.on(
-      "message_status_update",
-      ({messageId, status, conversationId}) => {
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv._id === conversationId
-              ? {
-                  ...conv,
-                  lastMessage: {
-                    ...conv.lastMessage,
-                    isDelivered: status === "delivered",
-                    isRead: status === "read",
-                  },
-                }
-              : conv,
-          ),
-        );
-      },
-    );
+    // socket.on(
+    //   "message_status_update",
+    //   ({messageId, status, conversationId}) => {
+    //     setConversations((prev) =>
+    //       prev.map((conv) =>
+    //         conv._id === conversationId
+    //           ? {
+    //               ...conv,
+    //               lastMessage: {
+    //                 ...conv.lastMessage,
+    //                 isDelivered: status === "delivered",
+    //                 isRead: status === "read",
+    //               },
+    //             }
+    //           : conv,
+    //       ),
+    //     );
+    //   },
+    // );
 
     return () => {
       socket.off("new_message");
@@ -154,81 +158,75 @@ const ChatList = ({
       ) : (
         <div className="flex-1 overflow-y-auto px-4 space-y-1.5 pb-10 custom-scrollbar">
           {filteredConversations && filteredConversations.length > 0 ? (
-            filteredConversations.map(
-              (conversation: any) => (
-  
-                (
-                  <div
-                    key={conversation._id}
-                    onClick={() => handleConversationClick(conversation)}
-                    className={`relative flex items-center gap-4 p-3.5 rounded-[1.4rem] hover:bg-indigo-50/50 cursor-pointer transition-all duration-200 border border-transparent hover:border-indigo-50 group active:scale-[0.98] ${selectedConversation?._id === conversation._id ? "bg-indigo-50 border-indigo-100" : ""}`}
-                  >
-                    {/* Avatar section with Status */}
-                    <div className="relative flex-shrink-0">
-                      <div className="w-[54px] h-[54px] rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm transition-transform group-hover:scale-105 duration-300">
-                        <img
-                          src={
-                            conversation.otherParticipant?.profilePic ||
-                            `https://api.dicebear.com/7.x/avataaars/svg?seed=${conversation.otherParticipant?.name}`
-                          }
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-
-                    {/* User Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline">
-                        <h4 className="font-extrabold text-slate-800 truncate text-[15px] tracking-tight group-hover:text-indigo-700 transition-colors">
-                          {conversation.otherParticipant?.name}
-                        </h4>
-                        <span className="text-[10px]  text-slate-400  ml-2 flex-shrink-0">
-                          {/* {conversation.lastMessage?.createdAt.to || "12:45 PM"} */}
-                          {formatTime(conversation.lastMessage?.createdAt)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center mt-0.5">
-                        <p className="text-[13px] text-slate-500 truncate font-medium max-w-[180px]">
-                          {conversation.lastMessage?.text ||
-                            conversation.otherParticipant?.email}
-                        </p>
-
-                        {isTyping &&
-                        selectedConversation?._id === conversation._id ? (
-                          <span className="text-xs font-bold text-green-500 ">
-                            Typing...
-                          </span>
-                        ) : null}
-
-                        {/* Unread Badge (Mockup) */}
-                        <div className="hidden group-hover:block transition-all">
-                          <MoreVertical
-                            size={14}
-                            className="text-slate-300 hover:text-slate-600"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Agar last message mere dwara bheja gaya hai, toh ticks dikhao */}
-                    {conversation.lastMessage?.sender ===
-                      (user as any)?._id && (
-                      <span className="flex-shrink-0">
-                        {conversation.lastMessage?.isRead ? (
-                          <CheckCheck size={14} className="text-blue-500" />
-                        ) : conversation.lastMessage?.isDelivered ? (
-                          <CheckCheck size={14} className="text-slate-400" /> // Double Tick
-                        ) : (
-                          <Check size={14} className="text-slate-400" /> // Single Tick
-                        )}
-                      </span>
-                    )}
+            filteredConversations.map((conversation: any) => (
+              <div
+                key={conversation._id}
+                onClick={() => handleConversationClick(conversation)}
+                className={`relative flex items-center gap-4 p-3.5 rounded-[1.4rem] hover:bg-indigo-50/50 cursor-pointer transition-all duration-200 border border-transparent hover:border-indigo-50 group active:scale-[0.98] ${selectedConversation?._id === conversation._id ? "bg-indigo-50 border-indigo-100" : ""}`}
+              >
+                {/* Avatar section with Status */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-[54px] h-[54px] rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm transition-transform group-hover:scale-105 duration-300">
+                    <img
+                      src={
+                        conversation.otherParticipant?.profilePic ||
+                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${conversation.otherParticipant?.name}`
+                      }
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                )
-              ),
-            )
+                </div>
+
+                {/* User Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline">
+                    <h4 className="font-extrabold text-slate-800 truncate text-[15px] tracking-tight group-hover:text-indigo-700 transition-colors">
+                      {conversation.otherParticipant?.name}
+                    </h4>
+                    <span className="text-[10px]  text-slate-400  ml-2 flex-shrink-0">
+                      {/* {conversation.lastMessage?.createdAt.to || "12:45 PM"} */}
+                      {formatTime(conversation.lastMessage?.createdAt)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center mt-0.5">
+                    <p className="text-[13px] text-slate-500 truncate font-medium max-w-[180px]">
+                      {conversation.lastMessage?.text ||
+                        conversation.otherParticipant?.email}
+                    </p>
+
+                    {isTyping &&
+                    selectedConversation?._id === conversation._id ? (
+                      <span className="text-xs font-bold text-green-500 ">
+                        Typing...
+                      </span>
+                    ) : null}
+
+                    {/* Unread Badge (Mockup) */}
+                    <div className="hidden group-hover:block transition-all">
+                      <MoreVertical
+                        size={14}
+                        className="text-slate-300 hover:text-slate-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Agar last message mere dwara bheja gaya hai, toh ticks dikhao */}
+                {conversation.lastMessage?.sender === (user as any)?._id && (
+                  <span className="flex-shrink-0">
+                    {conversation.lastMessage?.isRead ? (
+                      <CheckCheck size={14} className="text-blue-500" />
+                    ) : conversation.lastMessage?.isDelivered ? (
+                      <CheckCheck size={14} className="text-slate-400" /> // Double Tick
+                    ) : (
+                      <Check size={14} className="text-slate-400" /> // Single Tick
+                    )}
+                  </span>
+                )}
+              </div>
+            ))
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-10 text-center">
               <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mb-4">

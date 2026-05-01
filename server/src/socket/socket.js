@@ -92,7 +92,7 @@ export const socket = (server) => {
 
         // 3. Typing Indicator
         socket.on("typing", (data) => {
-            socket.to(data.conversationId).emit("display_typing",  data );
+            socket.to(data.conversationId).emit("display_typing", data);
         });
 
         socket.on("stop_typing", (data) => {
@@ -138,17 +138,20 @@ export const socket = (server) => {
         socket.on("mark_as_read", async ({ conversationId, userId }) => {
             try {
                 // Saare unread messages ko read mark karo jo is user ke liye hain
-                await Message.updateMany(
+                const updatedMessage = await Message.updateMany(
                     { conversationId, sender: { $ne: userId }, isRead: false },
                     { $set: { isRead: true }, $push: { readedBy: userId } }
                 )
 
                 // 2. Conversation ka lastMessage status bhi update karo
-                await Conversation.findByIdAndUpdate(
-                    { _id: conversationId },
-                    { $set: { "lastMessage.isRead": true } }
-                    , { new: true }
-                )
+                if (updatedMessage.isRead) {
+
+                    await Conversation.findByIdAndUpdate(
+                        { _id: conversationId },
+                        { $set: { "lastMessage.isRead": true } }
+                        , { new: true }
+                    )
+                }
 
                 // 3. Dusre participants ko batao ki messages read ho gaye hain
                 // Taaki unki screen par ticks BLUE ho jayein

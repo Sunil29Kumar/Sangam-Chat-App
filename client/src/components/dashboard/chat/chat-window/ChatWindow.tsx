@@ -6,13 +6,22 @@ import {AuthContext} from "../../../../context/AuthContext";
 import MessageInputContainer from "./MessageInputContainer";
 import MessageArea from "./MessageArea";
 import {BiLeftArrow} from "react-icons/bi";
+import { socketContext } from "../../../../context/socketContext";
 
 const ChatWindow = () => {
   const chatContext = useContext(ChatContext);
   const authContext = useContext(AuthContext);
+  const {onlineUsers} = useContext(socketContext);
   const {socket} = useSocket();
+
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+
+  console.log("online user ",onlineUsers);
+
+  
+  
 
   let typingTimeout: any;
 
@@ -35,6 +44,10 @@ const ChatWindow = () => {
 
   if (!authContext) return null;
   const {user} = authContext;
+
+    console.log("messages =", messages);
+    console.log("selectedconversition =", selectedConversation);
+    
 
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
@@ -91,7 +104,6 @@ const ChatWindow = () => {
     socket.on("new_message", (message: any) => {
       if (message.conversationId === selectedConversation?._id) {
         setMessages((prev) => [...prev, message]);
-
         socket.emit("mark_as_read", {
           conversationId: selectedConversation._id,
           userId: (user as any)?._id,
@@ -265,9 +277,7 @@ const ChatWindow = () => {
             <h4 className="font-bold text-slate-900 leading-tight text-[15px]">
               {selectedConversation?.otherParticipant?.name}
             </h4>
-            <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest mt-0.5">
-              Online
-            </p>
+       {onlineUsers?.includes(selectedConversation?.otherParticipant?._id) ? <span className="text-green-500">Online</span> : <span className="text-slate-400">Offline</span>}
           </div>
         </div>
         <div className="flex items-center gap-1">
