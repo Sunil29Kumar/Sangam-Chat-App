@@ -1,4 +1,4 @@
-import {useContext} from "react";
+import {useCallback, useContext} from "react";
 import {ChatContext} from "../context/ChatContext";
 import {AuthContext} from "../context/AuthContext";
 import {SocketContext} from "../context/SocketContext";
@@ -28,7 +28,7 @@ export const useSocket = () => {
     socket?.emit("join_chat", conversationId);
   };
 
-  const handleNewMessage = (message: any) => {
+  const handleNewMessage = useCallback((message: any) => {
     if (message.conversationId === selectedConversation?._id) {
       setMessages((prev) => [...prev, message]);
       socket.emit("mark_as_read", {
@@ -45,7 +45,7 @@ export const useSocket = () => {
         senderId: message.sender._id,
       });
     }
-  };
+  },[setMessages, selectedConversation, socket, updateLastMessageInList, user]);
 
   const handleDisplayTyping = (data) => {
     setIsTyping(true);

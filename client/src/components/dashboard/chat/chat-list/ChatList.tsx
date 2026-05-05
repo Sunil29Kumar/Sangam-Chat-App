@@ -1,3 +1,5 @@
+import Skeleton, {SkeletonTheme} from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import {
   MessageSquare,
   Plus,
@@ -36,6 +38,7 @@ const ChatList = ({
     isTyping,
     updateLastMessageInList,
     setConversations,
+    setMessages,
   } = chatContext;
 
   const {user} = authContext;
@@ -43,7 +46,6 @@ const ChatList = ({
   const [searchQuery, setSearchQuery] = useState("");
   const {joinRoom, socket} = useSocket();
   // console.log("conversition = " ,conversations);
-  
 
   // Filter conversations based on search
   const filteredConversations = conversations?.filter((c: any) =>
@@ -73,11 +75,64 @@ const ChatList = ({
       socket.off("new_message");
       socket.off("message_status_update");
     };
-  }, [socket, updateLastMessageInList, setConversations , selectedConversation, user]);
+  }, [
+    socket,
+    updateLastMessageInList,
+    setConversations,
+    selectedConversation,
+    user,
+  ]);
 
   useEffect(() => {
     getConversations();
   }, []);
+
+  // SkeletonTheme loading
+  if (loading) {
+    return (
+      <div className="p-5 space-y-6 bg-white h-full overflow-hidden">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-8 px-1">
+          <div className="flex flex-col gap-1">
+            <Skeleton width={120} height={28} borderRadius={8} />
+            <Skeleton width={80} height={16} borderRadius={6} />
+          </div>
+          <Skeleton width={48} height={48} borderRadius={16} />
+        </div>
+
+        {/* Search Bar Skeleton */}
+        <div className="mb-8">
+          <Skeleton height={48} borderRadius={16} />
+        </div>
+
+        {/* Conversations List Skeleton */}
+        <div className="space-y-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4 p-2">
+              {/* Avatar Skeleton - Exactly like your UI */}
+              <Skeleton width={56} height={56} borderRadius={20} />
+
+              <div className="flex-1">
+                <div className="flex justify-between items-start mb-2">
+                  {/* Name Skeleton */}
+                  <Skeleton width={100} height={18} />
+                  {/* Time Skeleton */}
+                  <Skeleton width={50} height={12} />
+                </div>
+
+                <div className="flex justify-between items-center">
+                  {/* Message Preview Skeleton */}
+                  <Skeleton width={140} height={14} />
+                  {/* Tick/Status Icon */}
+                  <Skeleton circle width={14} height={14} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full md:w-80 lg:w-[380px] h-screen border-r border-slate-100 flex flex-col bg-white select-none">
@@ -130,11 +185,7 @@ const ChatList = ({
 
       {/* --- Conversations List --- */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <p className="text-sm font-medium text-slate-500">
-            Loading conversations...
-          </p>
-        </div>
+        <></>
       ) : (
         <div className="flex-1 overflow-y-auto px-4 space-y-1.5 pb-10 custom-scrollbar">
           {filteredConversations && filteredConversations.length > 0 ? (

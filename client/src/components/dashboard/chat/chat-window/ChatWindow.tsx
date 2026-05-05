@@ -46,9 +46,9 @@ const ChatWindow = () => {
   if (!authContext) return null;
   const {user} = authContext;
 
-  // console.log("online user ", onlineUsers);
-  // console.log("messages =", messages);
-  // console.log("selectedconversition =", selectedConversation);
+  console.log("online user ", onlineUsers);
+  console.log("messages =", messages);
+  console.log("selectedconversition =", selectedConversation);
 
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
@@ -111,7 +111,6 @@ const ChatWindow = () => {
       socket.off("message_status_update");
       socket.off("messages_marked_as_read");
     };
-    
   }, [
     socket,
     selectedConversation?._id,
@@ -134,15 +133,10 @@ const ChatWindow = () => {
         userId: (user as any)?._id,
       });
     }
-    
-  }, [selectedConversation?._id, socket, user, getMessages]);
+  }, [selectedConversation?._id, socket, user?.id, getMessages]);
 
-  // Messages update hone pe scroll karna hai
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+
+
 
   if (!selectedConversation) {
     return (

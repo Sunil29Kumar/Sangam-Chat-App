@@ -1,4 +1,4 @@
-import {createContext, useEffect, useState} from "react";
+import {createContext, useCallback, useEffect, useState} from "react";
 import {getConversationsAuth, getMessagesAuth} from "../api/chatApi";
 import {showToast} from "../utils/toast";
 
@@ -12,6 +12,8 @@ interface ChatContextType {
   setMessages: React.Dispatch<React.SetStateAction<any[]>>;
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  isMessagesLoading: boolean;
+  setIsMessagesLoading: (loading: boolean) => void;
   isTyping: boolean;
   setIsTyping: (typing: boolean) => void;
   typingStatus: string;
@@ -35,6 +37,7 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
 
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
 
   const [isTyping, setIsTyping] = useState(false);
   const [typingStatus, setTypingStatus] = useState("");
@@ -47,7 +50,7 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
   });
   const [isReplyContainerOpen, setIsReplyContainerOpen] = useState(false);
 
-  const getConversations = async () => {
+  const getConversations = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -63,24 +66,28 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
       );
       setLoading(false);
     }
-  };
+  }, []);
 
-
-  const getMessages = async (conversationId: string) => {
+  const getMessages = useCallback(async (conversationId: string) => {
+    setIsMessagesLoading(true);
+    
     try {
       const response = await getMessagesAuth(conversationId);
       if (response.success) {
         setMessages(response.messages);
+        setIsMessagesLoading(false);
       }
     } catch (error: any) {
       showToast.error(
         error?.message || "An error occurred while fetching messages.",
       );
+    } finally {
+      setIsMessagesLoading(false);
     }
-  };
+  }, []);
 
   // ChatProvider ke andar
-  const updateLastMessageInList = (message : any) => {
+  const updateLastMessageInList = (message: any) => {
     setConversations((prevConversations) => {
       return prevConversations.map((conv) => {
         if (conv._id === message.conversationId) {
@@ -113,6 +120,8 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
         setMessages,
         loading,
         setLoading,
+        isMessagesLoading,
+        setIsMessagesLoading,
         isTyping,
         setIsTyping,
         typingStatus,
