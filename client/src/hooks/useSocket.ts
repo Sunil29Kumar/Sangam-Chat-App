@@ -1,7 +1,7 @@
 import {useCallback, useContext} from "react";
 import {ChatContext} from "../context/ChatContext";
 import {AuthContext} from "../context/AuthContext";
-import {SocketContext} from "../context/socketContext";
+import {SocketContext} from "../context/SocketContext";
 
 export const useSocket = () => {
   const context = useContext(SocketContext);
