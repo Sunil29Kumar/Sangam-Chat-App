@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+import 'react-loading-skeleton/dist/skeleton.css'
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
