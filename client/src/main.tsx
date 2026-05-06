@@ -3,6 +3,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { Toaster } from "sonner";
 import { AppProvider } from "./context/AppProvider.tsx";
+import "react-loading-skeleton/dist/skeleton.css";
 
 createRoot(document.getElementById("root")!).render(
     <AppProvider>
