@@ -8,7 +8,7 @@ import MessageArea from "./MessageArea";
 import {BiLeftArrow} from "react-icons/bi";
 
 import {formatTime} from "../../../../utils/formatTime";
-import {SocketContext} from "../../../../context/SocketContext";
+import {SocketContext} from "../../../../context/socketContext";
 
 const ChatWindow = () => {
   const chatContext = useContext(ChatContext);
