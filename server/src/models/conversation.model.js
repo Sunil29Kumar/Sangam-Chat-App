@@ -15,11 +15,6 @@ const conversationSchema = new Schema({
     ref: 'User'
   }],
 
-  // for Group
-  groupTitle: { type: String, trim: true },
-  groupAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  groupAvatar: { type: String },
-
   // Optimization: Last message yahan store karne se Sidebar fast load hota hai
   lastMessage: {
     text: String,
@@ -27,7 +22,19 @@ const conversationSchema = new Schema({
     isRead: { type: Boolean, default: false },
     isDelivered: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
-  }
+  },
+  pinnedMessage: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message',
+    default: null
+  },
+
+  // for Group
+  groupTitle: { type: String, trim: true },
+  groupAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  groupAvatar: { type: String },
+
+
 }, { timestamps: true });
 
 

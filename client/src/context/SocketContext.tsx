@@ -34,7 +34,7 @@ export default function SocketProvider({
 
       // Online users track karne ke liye (Backend se aayega)
       newSocket.on("get_online_users", (users) => {
-        console.log("online users", users);
+        // console.log("online users", users);
         setOnlineUsers(users);
       });
 

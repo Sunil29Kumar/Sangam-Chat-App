@@ -21,6 +21,7 @@ const ChatWindow = () => {
     handleMessageMarkedAsRead,
     handleDisplayTyping,
     handleHideTyping,
+    handlePinnedMessage,
   } = useSocket();
 
   const [text, setText] = useState("");
@@ -46,9 +47,9 @@ const ChatWindow = () => {
   if (!authContext) return null;
   const {user} = authContext;
 
-  console.log("online user ", onlineUsers);
-  console.log("messages =", messages);
-  console.log("selectedconversition =", selectedConversation);
+  // console.log("online user ", onlineUsers);
+  // console.log("messages =", messages);
+  // console.log("selectedconversition =", selectedConversation);
 
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
@@ -123,6 +124,14 @@ const ChatWindow = () => {
     handleHideTyping,
   ]);
 
+  // pinned message
+  useEffect(() => {
+    socket?.on("message_pinned_update", handlePinnedMessage);
+    return () => {
+      socket?.off("message_pinned_update", handlePinnedMessage);
+    }
+  }, [socket, handlePinnedMessage]);
+
   // Conversation select hone pe uske messages fetch karne hai aur us conversation ke messages read mark karne hai
   useEffect(() => {
     if (selectedConversation?._id) {
@@ -134,9 +143,6 @@ const ChatWindow = () => {
       });
     }
   }, [selectedConversation?._id, socket, user?.id, getMessages]);
-
-
-
 
   if (!selectedConversation) {
     return (
@@ -208,6 +214,7 @@ const ChatWindow = () => {
           </button>
         </div>
       </div>
+
 
       {/* Messages Area */}
       <MessageArea

@@ -146,12 +146,13 @@ export const socket = (server) => {
                 )
 
                 // 2. Conversation ka lastMessage status bhi update karo
-                if (updatedMessage.isRead) {
+                // agar is conversation ke messae read ho gaye hain toh conversation ke lastMessage ko bhi read mark kar do taaki sidebar mein ticks blue ho jayein
+                const messaage = await Message.findOne({ conversationId }).sort({ createdAt: -1 });
+                if (messaage?.isRead) {
 
                     await Conversation.findByIdAndUpdate(
                         { _id: conversationId },
                         { $set: { "lastMessage.isRead": true } }
-                        , { new: true }
                     )
                 }
 
@@ -178,13 +179,9 @@ export const socket = (server) => {
                 // }
                 io.emit("get_online_users", Object.keys(userSocketMap));
 
-
                 try {
-
                     // update user model lastSeen 
                     await User.findByIdAndUpdate(userId, { lastSeen: new Date() }, { new: true });
-
-
                 } catch (error) {
                     console.log("Error updating last seen:", error);
                 }
@@ -193,5 +190,6 @@ export const socket = (server) => {
         });
     });
 
+    return io
 
 }

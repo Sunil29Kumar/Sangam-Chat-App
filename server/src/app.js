@@ -26,13 +26,16 @@ app.use(cookieParser(process.env.COOKIE_KEY));
 app.use(cors({
     origin: process.env.CLIENT_URL,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 
 const server = createServer(app);
-socket(server);
+// socket(server);
+
+const io = socket(server);
+app.set("io", io); // Make io accessible in routes via req.app.get("io")
 
 // Routes
 app.use("/api",routesRoot );

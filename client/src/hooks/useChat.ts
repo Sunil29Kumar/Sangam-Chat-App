@@ -4,6 +4,7 @@ import {
   deleteConversationAuth,
   deleteMessageFromEveryoneAuth,
   deleteMessageFromMeAuth,
+  pinMessageAuth,
   searchUserAuth,
 } from "../api/chatApi";
 import {showToast} from "../utils/toast";
@@ -14,7 +15,7 @@ export const useChat = () => {
   const [loading, setLoading] = useState(false);
 
   if (!chatContext) return null;
-  const {getMessages, getConversations} = chatContext;
+  const {getMessages, getConversations,setSelectedConversation} = chatContext;
 
   const searchUser = async (query: string) => {
     setLoading(true);
@@ -60,6 +61,21 @@ export const useChat = () => {
       return null;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const pinnedMessage = async (conversationId: string, messageId: string) => {
+    try {
+      const response = await pinMessageAuth(conversationId, messageId);
+      // console.log("pin res =",response);
+
+      showToast.success(response.message);
+      return response;
+    } catch (error: string | any) {
+      showToast.error(
+        error?.message || "An error occurred while pinning message.",
+      );
+      return null;
     }
   };
 
@@ -114,6 +130,7 @@ export const useChat = () => {
     searchUser,
     createConversation,
     deleteConversation,
+    pinnedMessage,
     deleteMessageFromEveryone,
     deleteMessageForMe,
     loading,

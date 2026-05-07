@@ -62,7 +62,7 @@ const ChatList = ({
     (c: andy) => !c.deletedBy?.includes((user as any)._id),
   );
 
-  console.log(filteredDeletedConversations);
+  // console.log(filteredDeletedConversations);
 
   const handleConversationClick = (conv: any) => {
     setSelectedConversation(conv); // Right window update hogi

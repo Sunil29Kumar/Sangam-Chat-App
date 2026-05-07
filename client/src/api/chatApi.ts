@@ -60,6 +60,25 @@ export const deleteConversationAuth = async (conversationId: string) => {
   }
 };
 
+export const pinMessageAuth = async (
+  conversationId: string,
+  messageId: string,
+) => {
+  try {
+    const response = await axios.patch(
+      `/chat/conversations/${conversationId}/messages/${messageId}/pin-message`,
+    );
+    return response.data;
+  } catch (error: any) {
+    return (
+      error?.response.data || {
+        success: false,
+        message: "An error occurred while pinning message.",
+      }
+    );
+  }
+};
+
 export const getMessagesAuth = async (conversationId: string) => {
   try {
     const response = await axios.get(

@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 
 
+// conversation controller 
 export const searchUser = async (req, res) => {
     try {
         const { query } = req.query;
@@ -60,7 +61,6 @@ export const createConversation = async (req, res) => {
     }
 }
 
-
 export const deleteConversation = async (req, res) => {
     try {
         const { conversationId } = req.params;
@@ -85,13 +85,12 @@ export const deleteConversation = async (req, res) => {
     }
 }
 
-
 export const getConversations = async (req, res) => {
     try {
         const userId = req.user._id;
         const conversations = await Conversation.find({
             participants: userId
-        }).populate("participants", "name email conversations isOnline lastSeen profilePic").sort({ updatedAt: -1 });
+        }).populate("participants", "name email conversations isOnline lastSeen profilePic").populate("pinnedMessage", "content senderId createdAt").sort({ updatedAt: -1 });
 
         const formattedConversations = conversations.map(conv => {
             const otherParticipant = conv.participants.find(p => p._id.toString() !== userId.toString());
@@ -103,7 +102,36 @@ export const getConversations = async (req, res) => {
     }
 }
 
+export const pinMessage = async (req, res) => {
+    try {
+        const { message, conversation } = req.chatContext;
+        const io = req.app.get("io")
 
+        const isAlreadyPinned = conversation.pinnedMessage?.toString() === message._id.toString();
+
+        conversation.pinnedMessage = isAlreadyPinned ? null : message._id;
+        await conversation.save();
+
+        const updatedConv = await Conversation.findById(conversation._id).populate("pinnedMessage");
+
+        io.to(conversation._id.toString()).emit("message_pinned_update", {
+            pinnedMessage: updatedConv.pinnedMessage, 
+            conversationId: conversation._id
+        });
+
+        return res.status(200).json({
+            message: isAlreadyPinned ? "Message unpinned" : "Message pinned",
+            success: true,
+            pinnedMessageId: conversation.pinnedMessage
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error", success: false, error: error.message });
+    }
+}
+
+
+
+// Message Controller 
 export const getMessages = async (req, res) => {
     try {
         const { conversationId } = req.params;
@@ -137,3 +165,4 @@ export const deleteMessageForMe = async (req, res) => {
         return res.status(500).json({ message: "Internal server error", success: false, error: error.message });
     }
 }
+

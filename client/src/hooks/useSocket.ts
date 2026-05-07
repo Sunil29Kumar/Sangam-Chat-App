@@ -17,6 +17,7 @@ export const useSocket = () => {
   if (!chatContext) return null;
   const {
     selectedConversation,
+    setSelectedConversation,
     setMessages,
     setIsTyping,
     setTypingStatus,
@@ -28,24 +29,27 @@ export const useSocket = () => {
     socket?.emit("join_chat", conversationId);
   };
 
-  const handleNewMessage = useCallback((message: any) => {
-    if (message.conversationId === selectedConversation?._id) {
-      setMessages((prev) => [...prev, message]);
-      socket.emit("mark_as_read", {
-        conversationId: selectedConversation._id,
-        userId: (user as any)?._id,
-      });
-    }
+  const handleNewMessage = useCallback(
+    (message: any) => {
+      if (message.conversationId === selectedConversation?._id) {
+        setMessages((prev) => [...prev, message]);
+        socket.emit("mark_as_read", {
+          conversationId: selectedConversation._id,
+          userId: (user as any)?._id,
+        });
+      }
 
-    // send confirmation
-    updateLastMessageInList(message);
-    if (message.sender?._id !== (user as any)._id) {
-      socket.emit("message_delivered", {
-        messageId: message._id,
-        senderId: message.sender._id,
-      });
-    }
-  },[setMessages, selectedConversation, socket, updateLastMessageInList, user]);
+      // send confirmation
+      updateLastMessageInList(message);
+      if (message.sender?._id !== (user as any)._id) {
+        socket.emit("message_delivered", {
+          messageId: message._id,
+          senderId: message.sender._id,
+        });
+      }
+    },
+    [setMessages, selectedConversation, socket, updateLastMessageInList, user],
+  );
 
   const handleDisplayTyping = (data) => {
     setIsTyping(true);
@@ -118,6 +122,19 @@ export const useSocket = () => {
     }
   };
 
+  const handlePinnedMessage = ({pinnedMessage, conversationId}) => {
+    // console.log("selected conv hay");
+    // console.log("selected conv ", selectedConversation);
+    // console.log(selectedConversation?._id);
+
+    if (selectedConversation?._id === conversationId) {
+      setSelectedConversation((prev) => ({
+        ...prev,
+        pinnedMessage: pinnedMessage,
+      }));
+    }
+  };
+
   return {
     socket,
     joinRoom,
@@ -126,5 +143,6 @@ export const useSocket = () => {
     handleNewMessage,
     handleMessageStatusUpdate,
     handleMessageMarkedAsRead,
+    handlePinnedMessage,
   };
 };
