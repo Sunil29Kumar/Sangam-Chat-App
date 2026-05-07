@@ -72,6 +72,7 @@ export const socket = (server) => {
 
                 // Conversation ka preview update karein
                 await Conversation.findByIdAndUpdate(conversationId, {
+                    $set: { deletedBy: [] }, // Jab naya message aata hai toh deletedBy reset kar dein taaki sabko message dikhe
                     lastMessage: {
                         text: content,
                         sender: senderId,
@@ -173,10 +174,10 @@ export const socket = (server) => {
                 console.log(`❌ User Disconnected: ${userId}`);
 
                 // if (userSocketMap[userId] === socket.id) {
-                    delete userSocketMap[userId];
+                delete userSocketMap[userId];
                 // }
                 io.emit("get_online_users", Object.keys(userSocketMap));
-                
+
 
                 try {
 

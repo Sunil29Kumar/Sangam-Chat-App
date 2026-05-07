@@ -10,6 +10,10 @@ const conversationSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  deletedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
 
   // for Group
   groupTitle: { type: String, trim: true },

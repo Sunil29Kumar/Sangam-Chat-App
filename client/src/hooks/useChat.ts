@@ -1,6 +1,7 @@
 import {useContext, useState} from "react";
 import {
   createConversationAuth,
+  deleteConversationAuth,
   deleteMessageFromEveryoneAuth,
   deleteMessageFromMeAuth,
   searchUserAuth,
@@ -13,7 +14,7 @@ export const useChat = () => {
   const [loading, setLoading] = useState(false);
 
   if (!chatContext) return null;
-  const {getMessages} = chatContext;
+  const {getMessages, getConversations} = chatContext;
 
   const searchUser = async (query: string) => {
     setLoading(true);
@@ -39,6 +40,22 @@ export const useChat = () => {
     } catch (error: string | any) {
       showToast.error(
         error?.message || "An error occurred while creating conversation.",
+      );
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteConversation = async (conversationId: string) => {
+    try {
+      const response = await deleteConversationAuth(conversationId);
+      showToast.success(response.message);
+      getConversations();
+      return response;
+    } catch (error: string | any) {
+      showToast.error(
+        error?.message || "An error occurred while deleting conversation.",
       );
       return null;
     } finally {
@@ -96,6 +113,7 @@ export const useChat = () => {
   return {
     searchUser,
     createConversation,
+    deleteConversation,
     deleteMessageFromEveryone,
     deleteMessageForMe,
     loading,

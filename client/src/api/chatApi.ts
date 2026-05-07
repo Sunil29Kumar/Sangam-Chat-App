@@ -44,6 +44,22 @@ export const getConversationsAuth = async () => {
   }
 };
 
+export const deleteConversationAuth = async (conversationId: string) => {
+  try {
+    const response = await axios.delete(
+      `/chat/conversations/${conversationId}/delete`,
+    );
+    return response.data;
+  } catch (error: any) {
+    return (
+      error?.response.data || {
+        success: false,
+        message: "An error occurred while deleting conversation.",
+      }
+    );
+  }
+};
+
 export const getMessagesAuth = async (conversationId: string) => {
   try {
     const response = await axios.get(

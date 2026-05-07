@@ -1,6 +1,6 @@
 
 import express from "express";
-import { createConversation, deleteMessageForMe, deleteMessageFromEveryone, getConversations, getMessages, searchUser } from "../controllers/chat.controller.js";
+import { createConversation, deleteConversation, deleteMessageForMe, deleteMessageFromEveryone, getConversations, getMessages, searchUser } from "../controllers/chat.controller.js";
 import { chatGuard } from "../middleware/chatGuard.js";
 
 
@@ -14,8 +14,11 @@ router.get("/users/search", searchUser);
 // Create a new conversation or return existing one
 router.get("/conversations", getConversations);
 router.post("/conversations", createConversation);
+router.delete("/conversations/:conversationId/delete", deleteConversation)
+
 
 // Message routes
+
 router.get("/conversations/:conversationId/messages", getMessages)
 router.delete("/conversations/:conversationId/messages/:messageId/delete_for_everyone", chatGuard({ checkSender: true }), deleteMessageFromEveryone);
 
