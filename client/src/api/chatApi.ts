@@ -132,3 +132,24 @@ export const deleteMessageFromMeAuth = async (
     );
   }
 };
+
+export const editMessageAuth = async (
+  conversationId: string,
+  messageId: string,
+  newContent: string,
+) => {
+  try {
+    const response = await axios.patch(
+      `/chat/conversations/${conversationId}/messages/${messageId}/edit`,
+      {newContent},
+    );
+    return response.data;
+  } catch (error: any) {
+    return (
+      error?.response.data || {
+        success: false,
+        message: "An error occurred while editing message.",
+      }
+    );
+  }
+};

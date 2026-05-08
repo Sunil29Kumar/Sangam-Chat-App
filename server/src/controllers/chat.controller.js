@@ -166,3 +166,29 @@ export const deleteMessageForMe = async (req, res) => {
     }
 }
 
+export const editMessage = async (req, res) => {
+    try {
+        const { message } = req.chatContext;
+        const { newContent } = req.body;
+
+        if (!newContent || newContent.trim() === "") {
+            return res.status(400).json({ message: "New content cannot be empty", success: false });
+        }
+        if(message.isReaded){
+            return res.status(400).json({ message: "Cannot edit message that has been read by recipient(s)", success: false });
+        }
+
+        const updatedMessage = await Message.findByIdAndUpdate(message._id, { content: newContent, isEdited: true }, { new: true }).populate("sender", "name email profilePic");
+
+        const io = req.app.get("io");
+        io.to(message.conversationId.toString()).emit("message_edited", {
+            messageId: updatedMessage._id,
+            newContent: updatedMessage.content,
+            isEdited: updatedMessage.isEdited
+        });
+
+        return res.status(200).json({ message: "Message updated successfully", success: true});
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error", success: false, error: error.message });
+    }
+}

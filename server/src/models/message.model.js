@@ -15,7 +15,8 @@ const MessageSchema = new mongoose.Schema({
         messageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
         replayerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         content: { type: String }
-    }
+    },
+    isEdited: { type: Boolean, default: false }
 }, { timestamps: true });
 
 const Message = mongoose.model('Message', MessageSchema);

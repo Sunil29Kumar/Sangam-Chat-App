@@ -135,6 +135,16 @@ export const useSocket = () => {
     }
   };
 
+  const handleEditedMessage = async ({messageId,newContent,isEdited}) => {
+    setMessages((prev) => {
+      return prev.map((msg) => {
+        return msg._id === messageId
+          ? {...msg, content: newContent, isEdited: isEdited}
+          : msg;
+      });
+    });
+  };
+
   return {
     socket,
     joinRoom,
@@ -144,5 +154,6 @@ export const useSocket = () => {
     handleMessageStatusUpdate,
     handleMessageMarkedAsRead,
     handlePinnedMessage,
+    handleEditedMessage
   };
 };

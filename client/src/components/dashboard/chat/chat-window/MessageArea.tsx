@@ -32,11 +32,13 @@ function MessageArea({
   messages,
   user,
   selectedConversation,
+  scrollToReplayedMessage
 }: {
   // scrollRef: React.RefObject<HTMLDivElement>;
   messages: any[];
   user: any;
   selectedConversation: any;
+  scrollToReplayedMessage: (messageId: string) => void;
 }) {
   const {deleteMessageFromEveryone, deleteMessageForMe, pinnedMessage} =
     useChat();
@@ -55,6 +57,7 @@ function MessageArea({
     setIsReplyContainerOpen,
     conversations,
     isMessagesLoading,
+    setEditedMessage,
   } = chatContext;
 
   // console.log("conversation ", conversations);
@@ -100,16 +103,6 @@ function MessageArea({
       replyToMessageText: msg.content,
       conversationId: msg.conversationId,
     });
-  };
-
-  // ----- scroll Features  -----
-  const scrollToReplayedMessage = (messageId: string) => {
-    const element = document.getElementById(messageId);
-    if (element) {
-      element.scrollIntoView({behavior: "smooth", block: "center"});
-      element.classList.add("bg-indigo-100/50");
-      setTimeout(() => element.classList.remove("bg-indigo-100/50"), 2000);
-    }
   };
 
   const scrollBottomForNewMessage = useCallback(() => {
@@ -247,7 +240,7 @@ function MessageArea({
                     selectedConversation.pinnedMessage._id,
                   )
                 }
-                className="sticky top-0 z-[100] bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2 flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all duration-200 shadow-sm"
+                className="sticky top-0 z-100 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2 flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all duration-200 shadow-sm"
               >
                 <div className="flex items-center gap-3 overflow-hidden">
                   {/* Left Accent Bar */}
@@ -289,7 +282,7 @@ function MessageArea({
 
           {Object.entries(groupedMessages).map(
             ([date, msgs]: [string, any]) => (
-              <div key={date} className="  space-y-6">
+              <div key={date} className="  space-y-6 ">
                 {/* --- Date Separator --- */}
                 <div className="flex justify-center my-8">
                   <span className="bg-white border border-slate-200 shadow-sm px-4 py-1 rounded-full text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -309,7 +302,7 @@ function MessageArea({
                     <div
                       key={msg._id || index}
                       id={msg._id}
-                      className={`flex gap-3 max-w-[85%] group transition-all ${
+                      className={`flex gap-3 max-w-[85%] group transition-all  ${
                         isMe ? "ml-auto flex-row-reverse" : "mr-auto"
                       }`}
                     >
@@ -433,12 +426,22 @@ function MessageArea({
                                   <Pin size={14} /> Pin
                                 </button>
                                 {/* edit  */}
-                                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
-                                  <Edit size={14} /> Edit{" "}
-                                  <span className="text-[10px] opacity-50">
-                                    (Soon)
-                                  </span>
-                                </button>
+                                {user?._id === msg?.sender?._id && 
+                                !msg?.isRead && (
+                                  <button
+                                    onClick={() => {
+                                      setEditedMessage({
+                                        content: msg.content,
+                                        messageId: msg._id,
+                                        conversationId: msg.conversationId,
+                                      });
+                                      setActiveMenu(null);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                                  >
+                                    <Edit size={14} /> Edit{" "}
+                                  </button>
+                                )}
                                 {/* delete message  */}
                                 <div className="h-px bg-slate-100 my-1" />
                                 <button

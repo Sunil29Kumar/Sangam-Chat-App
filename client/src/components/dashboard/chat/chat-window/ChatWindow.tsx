@@ -1,6 +1,6 @@
 import {MessageSquare, Phone, Video, MoreVertical} from "lucide-react";
 import {ChatContext} from "../../../../context/ChatContext";
-import {useContext, useEffect, useRef, useState} from "react";
+import {use, useContext, useEffect, useRef, useState} from "react";
 import {useSocket} from "../../../../hooks/useSocket";
 import {AuthContext} from "../../../../context/AuthContext";
 import MessageInputContainer from "./MessageInputContainer";
@@ -22,6 +22,7 @@ const ChatWindow = () => {
     handleDisplayTyping,
     handleHideTyping,
     handlePinnedMessage,
+    handleEditedMessage,
   } = useSocket();
 
   const [text, setText] = useState("");
@@ -47,9 +48,9 @@ const ChatWindow = () => {
   if (!authContext) return null;
   const {user} = authContext;
 
-  // console.log("online user ", onlineUsers);
-  // console.log("messages =", messages);
-  // console.log("selectedconversition =", selectedConversation);
+  console.log("online user ", onlineUsers);
+  console.log("messages =", messages);
+  console.log("selectedconversition =", selectedConversation);
 
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
@@ -74,6 +75,15 @@ const ChatWindow = () => {
 
     setText("");
     setIsReplyContainerOpen(false);
+  };
+
+  const scrollToReplayedMessage = (messageId: string) => {
+    const element = document.getElementById(messageId);
+    if (element) {
+      element.scrollIntoView({behavior: "smooth", block: "center"});
+      element.classList.add("bg-indigo-100/50");
+      setTimeout(() => element.classList.remove("bg-indigo-100/50"), 2000);
+    }
   };
 
   // handle Typing status
@@ -129,8 +139,15 @@ const ChatWindow = () => {
     socket?.on("message_pinned_update", handlePinnedMessage);
     return () => {
       socket?.off("message_pinned_update", handlePinnedMessage);
-    }
+    };
   }, [socket, handlePinnedMessage]);
+
+  useEffect(() => {
+    socket?.on("message_edited", handleEditedMessage);
+    return () => {
+      socket?.off("message_edited", handleEditedMessage);
+    };
+  }, [socket, handleEditedMessage]);
 
   // Conversation select hone pe uske messages fetch karne hai aur us conversation ke messages read mark karne hai
   useEffect(() => {
@@ -215,13 +232,13 @@ const ChatWindow = () => {
         </div>
       </div>
 
-
       {/* Messages Area */}
       <MessageArea
         scrollRef={scrollRef as React.RefObject<HTMLDivElement>}
         messages={messages}
         user={user}
         selectedConversation={selectedConversation}
+        scrollToReplayedMessage={scrollToReplayedMessage}
       />
 
       {/* Input Container */}
@@ -230,6 +247,7 @@ const ChatWindow = () => {
         setText={setText}
         handleSendMessage={handleSendMessage}
         handleTyping={handleTyping}
+        scrollToReplayedMessage={scrollToReplayedMessage}
       />
     </div>
   );

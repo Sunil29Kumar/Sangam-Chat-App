@@ -22,6 +22,18 @@ interface ChatContextType {
   setReplyingData: (data: any) => void;
   isReplyContainerOpen: boolean;
   setIsReplyContainerOpen: (value: boolean) => void;
+  editedMessage: {
+    content: string;
+    messageId: string;
+    conversationId: string;
+  };
+  setEditedMessage: React.Dispatch<
+    React.SetStateAction<{
+      content: string;
+      messageId: string;
+      conversationId: string;
+    }>
+  >;
 
   // function
   getConversations: () => Promise<any>;
@@ -50,6 +62,16 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
   });
   const [isReplyContainerOpen, setIsReplyContainerOpen] = useState(false);
 
+  const [editedMessage, setEditedMessage] = useState<{
+    content: string;
+    messageId: string;
+    conversationId: string;
+  }>({
+    content: "",
+    messageId: "",
+    conversationId: "",
+  });
+
   const getConversations = useCallback(async () => {
     setLoading(true);
 
@@ -70,7 +92,7 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
 
   const getMessages = useCallback(async (conversationId: string) => {
     setIsMessagesLoading(true);
-    
+
     try {
       const response = await getMessagesAuth(conversationId);
       if (response.success) {
@@ -131,6 +153,8 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
         isReplyContainerOpen,
         setIsReplyContainerOpen,
         updateLastMessageInList,
+        editedMessage,
+        setEditedMessage,
       }}
     >
       {children}

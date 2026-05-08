@@ -4,6 +4,7 @@ import {
   deleteConversationAuth,
   deleteMessageFromEveryoneAuth,
   deleteMessageFromMeAuth,
+  editMessageAuth,
   pinMessageAuth,
   searchUserAuth,
 } from "../api/chatApi";
@@ -15,7 +16,7 @@ export const useChat = () => {
   const [loading, setLoading] = useState(false);
 
   if (!chatContext) return null;
-  const {getMessages, getConversations,setSelectedConversation} = chatContext;
+  const {getMessages, getConversations, setSelectedConversation} = chatContext;
 
   const searchUser = async (query: string) => {
     setLoading(true);
@@ -126,6 +127,29 @@ export const useChat = () => {
     }
   };
 
+  const editMessage = async (
+    conversationId: string,
+    messageId: string,
+    newContent: string,
+  ) => {
+    try {
+      const response = await editMessageAuth(
+        conversationId,
+        messageId,
+        newContent,
+      );
+      // getMessages(conversationId);
+      if (response?.success) showToast.success(response.message);
+      else showToast.error(response?.message || "Failed to edit message.");
+      return response;
+    } catch (error: string | any) {
+      showToast.error(
+        error?.message || "An error occurred while editing message.",
+      );
+      return null;
+    }
+  };
+
   return {
     searchUser,
     createConversation,
@@ -133,6 +157,7 @@ export const useChat = () => {
     pinnedMessage,
     deleteMessageFromEveryone,
     deleteMessageForMe,
+    editMessage,
     loading,
   };
 };
