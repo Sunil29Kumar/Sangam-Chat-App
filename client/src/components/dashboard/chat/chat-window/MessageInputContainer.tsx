@@ -89,7 +89,7 @@ function MessageInputContainer({
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 truncate leading-tight mt-0.5">
-                  {editedMessage.content.slice(0,10) + "..." || "..."}
+                  {editedMessage.content.slice(0, 10) + "..." || "..."}
                 </p>
               </div>
 
@@ -123,6 +123,8 @@ function MessageInputContainer({
                 setText(val);
               }
               handleTyping();
+              e.target.style.height = "auto";
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -135,6 +137,10 @@ function MessageInputContainer({
             }}
             placeholder="Type a message..."
             className="flex-1 bg-transparent border-none outline-none text-[15px] font-semibold text-slate-700 py-2.5 placeholder:text-slate-400"
+            style={{
+              wordBreak: "break-all", // 'sssss' ko todne ke liye
+              overflowWrap: "anywhere",
+            }}
           />
 
           {/* submit   */}
