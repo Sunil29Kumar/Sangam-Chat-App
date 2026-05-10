@@ -79,7 +79,8 @@ export const socket = (server) => {
                         isRead: false,
                         isDelivered: false,
                         createdAt: new Date()
-                    }
+                    },
+                    unreadedMsgCount: conversation.unreadedMsgCount + 1 
                 });
 
                 const populatedMsg = await newMessage.populate("sender", "name email profilePic");
@@ -152,7 +153,7 @@ export const socket = (server) => {
 
                     await Conversation.findByIdAndUpdate(
                         { _id: conversationId },
-                        { $set: { "lastMessage.isRead": true } }
+                        { $set: { "lastMessage.isRead": true, unreadedMsgCount: 0 } }
                     )
                 }
 

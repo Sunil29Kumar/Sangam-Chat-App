@@ -1,4 +1,4 @@
-import {createContext, useCallback, useState} from "react";
+import {createContext, useCallback, useEffect, useState} from "react";
 import {getConversationsAuth, getMessagesAuth} from "../api/chatApi";
 import {showToast} from "../utils/toast";
 
@@ -112,7 +112,7 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
   const updateLastMessageInList = (message: any) => {
     setConversations((prevConversations) => {
       return prevConversations.map((conv) => {
-        if (conv._id === message.conversationId) {
+        if (conv?._id === message.conversationId) {
           return {
             ...conv,
             lastMessage: {
@@ -128,6 +128,18 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
       });
     });
   };
+
+  // Frontend - ChatContext ya jahan conversation select ho rahi hai
+  useEffect(() => {
+    if (selectedConversation) {
+      // 2. Local state update karo taaki badge turant gayab ho jaye
+      setConversations((prev) =>
+        prev.map((c) =>
+          c._id === selectedConversation._id ? {...c, unreadedMsgCount: 0} : c,
+        ),
+      );
+    }
+  }, [selectedConversation]);
 
   return (
     <ChatContext.Provider

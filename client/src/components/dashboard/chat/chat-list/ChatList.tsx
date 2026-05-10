@@ -51,7 +51,7 @@ const ChatList = ({
   const [searchQuery, setSearchQuery] = useState("");
   const {joinRoom, socket} = useSocket();
   const [isConvMenuOpen, setIsConvMenuOpen] = useState(false);
-  // console.log("conversition = " ,conversations);
+  console.log("conversition = ", conversations);
 
   // Filter conversations based on search
   const filteredConversations = conversations?.filter((c: any) =>
@@ -59,7 +59,7 @@ const ChatList = ({
   );
 
   const filteredDeletedConversations = filteredConversations?.filter(
-    (c: andy) => !c.deletedBy?.includes((user as any)._id),
+    (c: any) => !c.deletedBy?.includes((user as any)._id),
   );
 
   // console.log(filteredDeletedConversations);
@@ -75,21 +75,25 @@ const ChatList = ({
     // Jab naya message aaye (Text update karne ke liye)
     socket.on("new_message", (message: any) => {
       if (message.conversationId === selectedConversation?._id) {
+        // lastmessage in conversation list update karne ke liye
         updateLastMessageInList(message);
         socket.emit("mark_as_read", {
           conversationId: selectedConversation._id,
           userId: (user as any)?._id,
         });
       }
+
+      
+
     });
 
     return () => {
       socket.off("new_message");
-      socket.off("message_status_update");
     };
   }, [
     socket,
     updateLastMessageInList,
+    setSelectedConversation,
     setConversations,
     selectedConversation,
     user,
@@ -214,13 +218,20 @@ const ChatList = ({
                   <div className="w-[54px] h-[54px] rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm transition-transform group-hover:scale-105 duration-300">
                     <img
                       src={
-                        conversation.otherParticipant?.profilePic ||
-                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${conversation.otherParticipant?.name}`
+                        conversation?.otherParticipant?.profilePic ||
+                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${conversation?.otherParticipant?.name}`
                       }
                       alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   </div>
+                  {conversation.unreadedMsgCount > 0 && (
+                    <div className=" w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold">
+                      {conversation.unreadedMsgCount > 9
+                        ? "9+"
+                        : conversation.unreadedMsgCount}
+                    </div>
+                  )}
                 </div>
 
                 {/* User Info */}

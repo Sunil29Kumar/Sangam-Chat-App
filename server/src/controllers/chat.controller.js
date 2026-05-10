@@ -1,4 +1,4 @@
-import { success } from "zod";
+import { promise, success } from "zod";
 import Conversation from "../models/conversation.model.js";
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
@@ -88,14 +88,20 @@ export const deleteConversation = async (req, res) => {
 export const getConversations = async (req, res) => {
     try {
         const userId = req.user._id;
+
         const conversations = await Conversation.find({
             participants: userId
         }).populate("participants", "name email conversations isOnline lastSeen profilePic").populate("pinnedMessage", "content senderId createdAt").sort({ updatedAt: -1 });
 
-        const formattedConversations = conversations.map(conv => {
-            const otherParticipant = conv.participants.find(p => p._id.toString() !== userId.toString());
-            return { ...conv.toObject(), otherParticipant };
-        });
+        const formattedConversations = await Promise.all(conversations.map(async (conv) => {
+            const otherParticipant = conv.participants.find((p) => p._id.toString() !== userId.toString());
+            const count = await Message.countDocuments({
+                conversationId: conv._id,
+                isRead: false,
+                sender: { $ne: userId }
+            });
+            return { ...conv.toObject(), otherParticipant, unreadedMsgCount: count };
+        }));
         return res.status(200).json({ conversations: formattedConversations, message: "Conversations fetched successfully", success: true });
     } catch (error) {
         return res.status(500).json({ message: "Internal server error", success: false });
@@ -115,7 +121,7 @@ export const pinMessage = async (req, res) => {
         const updatedConv = await Conversation.findById(conversation._id).populate("pinnedMessage");
 
         io.to(conversation._id.toString()).emit("message_pinned_update", {
-            pinnedMessage: updatedConv.pinnedMessage, 
+            pinnedMessage: updatedConv.pinnedMessage,
             conversationId: conversation._id
         });
 
@@ -174,7 +180,7 @@ export const editMessage = async (req, res) => {
         if (!newContent || newContent.trim() === "") {
             return res.status(400).json({ message: "New content cannot be empty", success: false });
         }
-        if(message.isReaded){
+        if (message.isReaded) {
             return res.status(400).json({ message: "Cannot edit message that has been read by recipient(s)", success: false });
         }
 
@@ -187,7 +193,7 @@ export const editMessage = async (req, res) => {
             isEdited: updatedMessage.isEdited
         });
 
-        return res.status(200).json({ message: "Message updated successfully", success: true});
+        return res.status(200).json({ message: "Message updated successfully", success: true });
     } catch (error) {
         return res.status(500).json({ message: "Internal server error", success: false, error: error.message });
     }

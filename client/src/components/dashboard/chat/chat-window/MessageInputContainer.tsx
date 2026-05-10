@@ -27,7 +27,6 @@ function MessageInputContainer({
     editedMessage,
     setEditedMessage,
   } = chatContext;
-  console.log("em 1", text);
 
   const handleEditMessage = async () => {
     if (!editedMessage.content.trim()) return;
@@ -38,7 +37,6 @@ function MessageInputContainer({
       editedMessage.messageId,
       editedMessage.content,
     );
-    console.log("editt", response);
 
     if (response.success) {
       // Reset Everything

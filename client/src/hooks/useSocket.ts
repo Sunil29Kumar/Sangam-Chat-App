@@ -37,6 +37,8 @@ export const useSocket = () => {
           conversationId: selectedConversation._id,
           userId: (user as any)?._id,
         });
+
+      
       }
 
       // send confirmation
@@ -48,7 +50,13 @@ export const useSocket = () => {
         });
       }
     },
-    [setMessages, selectedConversation, socket, updateLastMessageInList, user],
+    [
+      setMessages,
+      selectedConversation,
+      socket,
+      updateLastMessageInList,
+      user
+    ],
   );
 
   const handleDisplayTyping = (data) => {
@@ -115,6 +123,7 @@ export const useSocket = () => {
                   ...conv.lastMessage,
                   isRead: true,
                 },
+                // unreadedMsgCount: 0,
               }
             : conv,
         ),
@@ -123,19 +132,16 @@ export const useSocket = () => {
   };
 
   const handlePinnedMessage = ({pinnedMessage, conversationId}) => {
-    // console.log("selected conv hay");
-    // console.log("selected conv ", selectedConversation);
-    // console.log(selectedConversation?._id);
 
     if (selectedConversation?._id === conversationId) {
-      setSelectedConversation((prev) => ({
+      setSelectedConversation((prev: any) => ({
         ...prev,
         pinnedMessage: pinnedMessage,
       }));
     }
   };
 
-  const handleEditedMessage = async ({messageId,newContent,isEdited}) => {
+  const handleEditedMessage = async ({messageId, newContent, isEdited}) => {
     setMessages((prev) => {
       return prev.map((msg) => {
         return msg._id === messageId
@@ -154,6 +160,6 @@ export const useSocket = () => {
     handleMessageStatusUpdate,
     handleMessageMarkedAsRead,
     handlePinnedMessage,
-    handleEditedMessage
+    handleEditedMessage,
   };
 };

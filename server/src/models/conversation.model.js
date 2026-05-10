@@ -14,6 +14,10 @@ const conversationSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  unreadedMsgCount:{
+    type: Number,
+    default: 0
+  },
 
   // Optimization: Last message yahan store karne se Sidebar fast load hota hai
   lastMessage: {
