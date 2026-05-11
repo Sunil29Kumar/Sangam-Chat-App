@@ -41,6 +41,7 @@ const ChatWindow = () => {
     setMessages,
     setSelectedConversation,
     replyingData,
+
     setIsReplyContainerOpen,
     updateLastMessageInList,
   } = chatContext;
@@ -50,7 +51,7 @@ const ChatWindow = () => {
 
   console.log("online user ", onlineUsers);
   console.log("messages =", messages);
-  
+
   console.log("selectedconversition =", selectedConversation);
 
   const handleSendMessage = () => {
@@ -181,7 +182,7 @@ const ChatWindow = () => {
   return (
     <div className="flex flex-col w-full h-full max-h-full overflow-hidden bg-[#fafafa]">
       {/* Chat Header */}
-      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex justify-between items-center bg-white/90 backdrop-blur-md z-20 shadow-sm flex-shrink-0">
+      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex justify-between items-center bg-white/90 backdrop-blur-md z-20 shadow-sm shrink-0">
         <div className="flex items-center gap-3 md:gap-4">
           {/* Back button — sirf mobile pe dikhega */}
           <button
@@ -190,6 +191,8 @@ const ChatWindow = () => {
           >
             <BiLeftArrow size={20} className="text-slate-500" />
           </button>
+
+          {/* avatar and name */}
           <div className="relative">
             <img
               src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedConversation?.otherParticipant?.name}`}
@@ -199,10 +202,12 @@ const ChatWindow = () => {
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 md:w-3.5 md:h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
           </div>
           <div>
+            {/* name  */}
             <h4 className="font-bold text-slate-900 leading-tight text-[15px]">
               {selectedConversation?.otherParticipant?.name}
             </h4>
 
+            {/* user online status  */}
             {onlineUsers?.includes(
               selectedConversation?.otherParticipant?._id,
             ) ? (
@@ -220,11 +225,12 @@ const ChatWindow = () => {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
+        {/* Action buttons (call, video, more) */}
+        <div className="flex items-center ">
+          <button className=" hidden md:block p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
             <Phone size={18} />
           </button>
-          <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
+          <button className=" hidden md:block p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">
             <Video size={18} />
           </button>
           <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all">

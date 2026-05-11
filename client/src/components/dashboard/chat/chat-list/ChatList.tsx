@@ -51,6 +51,7 @@ const ChatList = ({
   const [searchQuery, setSearchQuery] = useState("");
   const {joinRoom, socket} = useSocket();
   const [isConvMenuOpen, setIsConvMenuOpen] = useState(false);
+
   console.log("conversition = ", conversations);
 
   // Filter conversations based on search
@@ -71,7 +72,6 @@ const ChatList = ({
 
   useEffect(() => {
     if (!socket) return;
-
     // Jab naya message aaye (Text update karne ke liye)
     socket.on("new_message", (message: any) => {
       if (message.conversationId === selectedConversation?._id) {
@@ -82,9 +82,6 @@ const ChatList = ({
           userId: (user as any)?._id,
         });
       }
-
-      
-
     });
 
     return () => {
@@ -103,25 +100,73 @@ const ChatList = ({
     getConversations();
   }, []);
 
-  // SkeletonTheme loading
-  if (loading) {
-    return (
-      <div className="p-5 space-y-6 bg-white h-full overflow-hidden">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8 px-1">
-          <div className="flex flex-col gap-1">
-            <Skeleton width={120} height={28} borderRadius={8} />
-            <Skeleton width={80} height={16} borderRadius={6} />
+  return (
+    <div className="w-full md:w-70 lg:w-80  h-screen border-r border-slate-100 flex flex-col bg-white select-none">
+      <div className="p-2 pb-5">
+        {/* --- Header  --- */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl  text-slate-900 tracking-tight leading-none">
+              Chats
+            </h2>
           </div>
-          <Skeleton width={48} height={48} borderRadius={16} />
+
+          {/* add user  */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="group relative w-8 h-8 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-indigo-600 transition-all duration-300 shadow-xl shadow-slate-200 active:scale-90"
+          >
+            <Plus
+              size={22}
+              className="group-hover:rotate-90 transition-transform duration-300"
+            />
+            {isMenuOpen && (
+              <div className="absolute top-11 right-0">
+                <AddUser
+                  setIsMenuOpen={setIsMenuOpen}
+                  setIsNewChatModalOpen={setIsNewChatModalOpen}
+                />
+              </div>
+            )}
+          </button>
         </div>
 
-        {/* Search Bar Skeleton */}
-        <div className="mb-8">
-          <Skeleton height={48} borderRadius={16} />
+        {/* --- Search Bar --- */}
+        <div className="w-full flex justify-start items-center gap-2 pl-2  bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white  transition-all  group rounded-sm ">
+          <Search
+            className="  text-slate-400 group-focus-within:text-indigo-600 transition-colors duration-300"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search friends..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className=" py-2 px-1 w-full  border-transparent outline-none font-semibold  text-slate-700 placeholder:text-slate-400  "
+          />
         </div>
 
-        {/* Conversations List Skeleton */}
+        {/* extra features like all , unreaded , groups, channels etc  */}
+        <div>
+          <div className="flex items-center gap-4 mt-4">
+            <button
+              className={`px-3 py-1 rounded-full text-sm font-bold transition-all ${!searchQuery ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              onClick={() => setSearchQuery("")}
+            >
+              All
+            </button>
+            <button
+              className={`px-3 py-1 rounded-full text-sm font-bold transition-all ${searchQuery ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              onClick={() => setSearchQuery("unreaded")}
+            >
+              Unreaded
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* --- Conversations List --- */}
+      {loading ? (
         <div className="space-y-4">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="flex items-center gap-4 p-2">
@@ -146,76 +191,19 @@ const ChatList = ({
             </div>
           ))}
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full md:w-80 lg:w-[380px]  h-screen border-r border-slate-100 flex flex-col bg-white select-none">
-      <div className="p-7 pb-5">
-        {/* --- Header  --- */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-[900] text-slate-900 tracking-tight leading-none">
-              Messages
-            </h2>
-            <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-[0.2em] mt-2">
-              {conversations?.length || 0} active chats
-            </p>
-          </div>
-
-          {/* add user  */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="group relative w-11 h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-600 transition-all duration-300 shadow-xl shadow-slate-200 active:scale-90"
-          >
-            <Plus
-              size={22}
-              className="group-hover:rotate-90 transition-transform duration-300"
-            />
-            {isMenuOpen && (
-              <div className="absolute top-11 right-0">
-                <AddUser
-                  setIsMenuOpen={setIsMenuOpen}
-                  setIsNewChatModalOpen={setIsNewChatModalOpen}
-                />
-              </div>
-            )}
-          </button>
-        </div>
-
-        {/* --- Search Bar --- */}
-        <div className="w-full flex justify-start items-center gap-2 pl-2  bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white rounded-[1.2rem]  transition-all  group">
-          <Search
-            className="  text-slate-400 group-focus-within:text-indigo-600 transition-colors duration-300"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder="Search friends..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className=" py-3 px-1 w-full border-2 border-transparent outline-none  font-semibold  text-slate-700 placeholder:text-slate-400 shadow-inner "
-          />
-        </div>
-      </div>
-
-      {/* --- Conversations List --- */}
-      {loading ? (
-        <></>
       ) : (
-        <div className="flex-1 overflow-y-auto px-4 space-y-1.5 pb-10 custom-scrollbar ">
+        <div className="flex-1 overflow-y-auto px-1 md:px-2 space-y-1.5 custom-scrollbar ">
           {filteredDeletedConversations &&
           filteredDeletedConversations.length > 0 ? (
             filteredDeletedConversations.map((conversation: any) => (
               <div
                 key={conversation._id}
                 onClick={() => handleConversationClick(conversation)}
-                className={` flex items-center gap-4 p-3.5 rounded-[1.4rem] hover:bg-indigo-50/50 cursor-pointer transition-all duration-200 border border-transparent hover:border-indigo-50 group active:scale-[0.98] ${selectedConversation?._id === conversation._id ? "bg-indigo-50 border-indigo-100" : ""}`}
+                className={` flex items-center gap-4 p-2 rounded-md hover:bg-indigo-50/50 cursor-pointer transition-all duration-200 border border-transparent hover:border-indigo-50 group active:scale-[0.98] ${selectedConversation?._id === conversation._id ? "bg-indigo-50 border-indigo-100" : ""}`}
               >
                 {/* Avatar section with Status */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-[54px] h-[54px] rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm transition-transform group-hover:scale-105 duration-300">
+                <div className="relative shrink-0">
+                  <div className="w-12 h-12 md:w-10 md-h-10 rounded-full overflow-hidden bg-slate-100 border-2 border-white  transition-transform group-hover:scale-105 duration-300">
                     <img
                       src={
                         conversation?.otherParticipant?.profilePic ||
@@ -225,6 +213,7 @@ const ChatList = ({
                       className="w-full h-full object-cover"
                     />
                   </div>
+                  {/* unreaded message count  */}
                   {conversation.unreadedMsgCount > 0 && (
                     <div className=" w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold">
                       {conversation.unreadedMsgCount > 9
@@ -238,7 +227,7 @@ const ChatList = ({
                 <div className="flex-1 min-w-0">
                   {/* name and time  */}
                   <div className="flex justify-between items-baseline">
-                    <h4 className="font-extrabold text-slate-800 truncate text-[15px] tracking-tight group-hover:text-indigo-700 transition-colors">
+                    <h4 className=" text-slate-800 truncate text-sm tracking-tight group-hover:text-indigo-700 transition-colors">
                       {conversation.otherParticipant?.name}
                     </h4>
                     <span className="text-[10px]  text-slate-400  ml-2 flex-shrink-0">
@@ -249,9 +238,10 @@ const ChatList = ({
 
                   {/* text  */}
                   <div className="flex justify-between items-center mt-0.5">
-                    <p className="text-[13px] text-slate-500 truncate font-medium max-w-[180px]">
-                      {conversation.lastMessage?.text ||
-                        conversation.otherParticipant?.email}
+                    <p className="text-[12px] text-slate-500 truncate ">
+                      {conversation.lastMessage?.text && conversation.lastMessage?.text.length > 10
+                        ? conversation.lastMessage.text.slice(0, 10) + "..."
+                        : conversation.lastMessage?.text || "No messages yet"}
                     </p>
 
                     {isTyping &&

@@ -26,18 +26,16 @@ const Dashboard = () => {
   const isMobile = windowWidth < 768;
 
   return (
-    <div className="flex h-full w-full bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-white">
-      {/* LEFT: ChatList — mobile pe sirf tab dikhao jab koi conversation select NA ho */}
+    <div className="flex h-full w-full bg-white  shadow-xl overflow-hidden border border-white">
       <div
         className={`
           ${isMobile && selectedConversation ? "hidden" : "flex"}
-          w-full md:w-80 lg:w-[380px] flex-shrink-0
+          w-full md:w-70 lg:w-80 flex-shrink-0
         `}
       >
         <ChatList setIsNewChatModalOpen={setIsNewChatModalOpen} />
       </div>
 
-      {/* RIGHT: ChatWindow — mobile pe sirf tab dikhao jab conversation select HO */}
       <div
         className={`
           ${isMobile && !selectedConversation ? "hidden" : "flex"}

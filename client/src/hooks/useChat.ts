@@ -16,7 +16,8 @@ export const useChat = () => {
   const [loading, setLoading] = useState(false);
 
   if (!chatContext) return null;
-  const {getMessages, getConversations, setSelectedConversation} = chatContext;
+  const {getMessages, getConversations, setSelectedConversation, setMessages} =
+    chatContext;
 
   const searchUser = async (query: string) => {
     setLoading(true);
@@ -89,9 +90,13 @@ export const useChat = () => {
         conversationId,
         messageId,
       );
-      getMessages(conversationId);
-      if (response?.success) showToast.success(response.message);
-      else
+      // getMessages(conversationId);
+      if (response?.success) {
+        showToast.success(response.message);
+        setMessages((prevMessages) =>
+          prevMessages.filter((msg) => msg._id !== messageId),
+        );
+      } else
         showToast.error(
           response?.message || "Failed to delete message for everyone.",
         );
@@ -113,9 +118,12 @@ export const useChat = () => {
   ) => {
     try {
       const response = await deleteMessageFromMeAuth(conversationId, messageId);
-      getMessages(conversationId);
-      if (response?.success) showToast.success(response.message);
-      else
+      if (response?.success) {
+        showToast.success(response.message);
+        setMessages((prevMessages) =>
+          prevMessages.filter((msg) => msg._id !== messageId),
+        );
+      } else
         showToast.error(
           response?.message || "Failed to delete message for me.",
         );

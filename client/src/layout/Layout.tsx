@@ -14,7 +14,7 @@ function Layout() {
         <Sidebar />
 
       {/* Main Content: Sidebar ki width (80px/w-20) ke barabar margin-left */}
-      <main className="flex-1 ml-0 md:ml-24 h-full p-4 md:p-6 overflow-hidden">
+      <main className="flex-1 ml-0 md:ml-24 h-full p-1  overflow-hidden">
         {/* Is div mein aapka Dashboard/Settings render hoga */}
         <div className="h-full w-full">
           <Outlet />

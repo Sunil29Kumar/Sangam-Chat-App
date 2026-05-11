@@ -26,6 +26,7 @@ function MessageInputContainer({
     replyingData,
     editedMessage,
     setEditedMessage,
+    setReplyingData
   } = chatContext;
 
   const handleEditMessage = async () => {
@@ -46,7 +47,7 @@ function MessageInputContainer({
   };
 
   return (
-    <div className=" px-3 py-3 flex-shrink-0 min-w-0 w-full overflow-hidden ">
+    <div className=" py:0 px-3 md:py-1 shrink-0 min-w-0 w-full overflow-hidden mb-18 md:mb-0  ">
       {/* --- Message Input Container --- */}
 
       <div className=" bg-white py-2 px-3 rounded-[1.8rem] border-2 border-slate-50 flex flex-col gap-2 overflow-hidden flex-nowrap w-full shadow-sm ">
@@ -55,14 +56,27 @@ function MessageInputContainer({
           <div className=" flex justify-between px-3 py-2 bg-gray-100 rounded-md ">
             <p>
               <span>{replyingData?.messageSender?.name || "You"}</span>
-              <h3>
-                {replyingData?.replyToMessageText.length > 150
-                  ? replyingData?.replyToMessageText.substring(0, 150) + "..."
+              <h3
+                onClick={() =>
+                  scrollToReplayedMessage(replyingData.replyToMessageId)
+                }
+                className=" cursor-pointer bg-blue-100 w-full p-2 rounded-md  "
+              >
+                {replyingData?.replyToMessageText.length > 50
+                  ? replyingData?.replyToMessageText.substring(0, 50) + "..."
                   : replyingData?.replyToMessageText}
               </h3>
             </p>
             <IoMdClose
-              onClick={() => setIsReplyContainerOpen(false)}
+              onClick={() => {
+                setIsReplyContainerOpen(false);
+                setReplyingData({
+                  messageSender: {},
+                  replyToMessageId: "",
+                  replyToMessageText: "",
+                  conversationId: "",
+                });
+              }}
               className=" cursor-pointer "
             />
           </div>
@@ -114,10 +128,8 @@ function MessageInputContainer({
             onChange={(e) => {
               const val = e.target.value;
               if (editedMessage.messageId) {
-                // Agar editing mode on hai
                 setEditedMessage({...editedMessage, content: val});
               } else {
-                // Agar normal message mode hai
                 setText(val);
               }
               handleTyping();

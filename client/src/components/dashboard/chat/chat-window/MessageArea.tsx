@@ -51,15 +51,19 @@ function MessageArea({
   const [menuBtnPosition, setMenuBtnPosition] = useState({y: 0, x: 0});
   const [isScrollButtonVisible, setIsScrollButtonVisible] = useState(false);
   const windowHeight = window.innerHeight;
+  const windowWidth = window.innerWidth;
 
   if (!chatContext) return null;
   const {
     setReplyingData,
+    isReplyContainerOpen,
     setIsReplyContainerOpen,
     conversations,
     isMessagesLoading,
     setEditedMessage,
   } = chatContext;
+
+  const prevMessageLength = useRef(messages.length);
 
   // console.log("conversation ", conversations);
 
@@ -137,8 +141,12 @@ function MessageArea({
   };
 
   useEffect(() => {
-    scrollBottomForNewMessage();
-  }, [messages]);
+    const isNewMessageAdded = messages.length > prevMessageLength.current;
+    if (isNewMessageAdded) {
+      scrollBottomForNewMessage();
+    }
+    prevMessageLength.current = messages.length;
+  }, [messages, scrollBottomForNewMessage]);
 
   // ------  end of scroll features  -----
 
@@ -209,7 +217,9 @@ function MessageArea({
         <>
           {/* scroll to bottom button */}
           {isScrollButtonVisible && (
-            <div className="fixed bottom-24 right-8 z-[100]">
+            <div
+              className={`fixed ${isReplyContainerOpen ? "bottom-35" : "bottom-24"} right-8 z-[100]`}
+            >
               <div
                 onClick={clickScrollBottom}
                 className="group bg-white/80 backdrop-blur-md p-3 cursor-pointer rounded-2xl 
@@ -242,7 +252,7 @@ function MessageArea({
                     selectedConversation.pinnedMessage._id,
                   )
                 }
-                className="sticky top-0 z-100 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2 flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all duration-200 shadow-sm"
+                className="sticky top-0 z-100  bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-2 flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all duration-200 shadow-sm"
               >
                 <div className="flex items-center gap-3 overflow-hidden">
                   {/* Left Accent Bar */}
@@ -301,7 +311,7 @@ function MessageArea({
                   const isMenuOpen = activeMenu === msg?._id;
                   const time = new Date(msg?.createdAt);
                   const formattedTime = `${time.getHours()}:${time.getMinutes()} ${time.getHours() >= 12 ? "PM" : "AM"}`;
-                  
+
                   return (
                     <div
                       key={msg._id || index}
@@ -310,11 +320,6 @@ function MessageArea({
                         isMe ? "ml-auto flex-row-reverse" : "mr-auto"
                       }`}
                     >
-                      {/* message time  */}
-                      <p className="text-[8px] self-end mb-1 text-slate-400 font-medium  ">
-                        {formattedTime}
-                      </p>
-
                       <div className="relative flex items-end justify-end gap-2">
                         {/* Hover Actions */}
                         <div
@@ -323,7 +328,7 @@ function MessageArea({
                           {/* reply button  */}
                           <button
                             onClick={() => handleReply(msg)}
-                            className="p-1.5 hover:bg-slate-100 rounded-full"
+                            className=" hidden md:block p-1.5 hover:bg-slate-100 rounded-full"
                           >
                             <LiaReplySolid
                               size={18}
@@ -371,20 +376,27 @@ function MessageArea({
 
                           {/* Main Message Bubble  ------------- */}
                           <div
-                            className={`relative px-4 py-2.5 shadow-sm text-[14.5px] leading-relaxed     ${
+                            className={`relative px-4 py-2.5 shadow-sm text-md leading-relaxed     ${
                               isMe
                                 ? "bg-indigo-600 text-white rounded-2xl rounded-br-none"
                                 : "bg-white text-slate-700 rounded-2xl rounded-bl-none border border-slate-100"
                             }`}
                           >
-                            <div className=" flex flex-col sm:flex-row sm:items-end gap-2 max-w-full min-w-0 ">
-                              {/* main message  */}
-                              <p
-                                className="whitespace-pre-wrap leading-relaxed flex-1 min-w-0  break-all"
-                                style={{overflowWrap: "anywhere"}} // Force breaking for long sssss text
-                              >
-                                {msg.content}
-                              </p>
+                            <div className=" flex flex-row  items-end gap-2 max-w-full min-w-0 ">
+                              <div>
+                                {/* main message  */}
+                                <p
+                                  className="whitespace-pre-wrap leading-relaxed flex-1 min-w-0  break-all"
+                                  style={{overflowWrap: "anywhere"}} // Force breaking for long sssss text
+                                >
+                                  {msg.content}
+                                </p>
+
+                                {/* message time  */}
+                                <p className="text-[8px] self-end mb-1 text-slate-400 font-medium  ">
+                                  {formattedTime}
+                                </p>
+                              </div>
 
                               {/* is readed status ke ticks   */}
                               {msg.sender?._id === user._id && (
@@ -419,9 +431,14 @@ function MessageArea({
                           className="fixed z-[999] w-48 bg-white border border-slate-100 shadow-2xl rounded-xl py-2 animate-in fade-in zoom-in duration-150"
                           style={{
                             // X-axis: Agar 'isMe' hai toh thoda left shift karo taaki menu icon ke upar na aaye
-                            left: isMe
-                              ? `${menuBtnPosition.x - 175}px`
-                              : `${menuBtnPosition.x - 45}px`,
+                            left:
+                              currentWindowHeight! > windowHeight - 250
+                                ? isMe
+                                  ? `${menuBtnPosition.x - 15}px`
+                                  : `${menuBtnPosition.x - 45}px`
+                                : isMe
+                                  ? `${menuBtnPosition.x - 175}px`
+                                  : `${menuBtnPosition.x - 45}px`,
 
                             // Y-axis: Agar screen ke bahut niche hai toh menu ko upar shift kar do
                             top:
@@ -436,16 +453,20 @@ function MessageArea({
                         >
                           {/* reply  */}
                           <button
-                            onClick={() => handleReply(msg)}
+                            onClick={() => {
+                              handleReply(msg);
+                              setActiveMenu(null);
+                            }}
                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
                           >
                             <Reply size={14} /> Reply
                           </button>
                           {/* pinned message  */}
                           <button
-                            onClick={() =>
-                              pinnedMessage(msg.conversationId, msg._id)
-                            }
+                            onClick={() => {
+                              pinnedMessage(msg.conversationId, msg._id);
+                              setActiveMenu(null);
+                            }}
                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
                           >
                             <Pin size={14} /> Pin
@@ -469,21 +490,22 @@ function MessageArea({
                           {/* delete message  */}
                           <div className="h-px bg-slate-100 my-1" />
                           <button
-                            onClick={() =>
-                              deleteMessageForMe(msg.conversationId, msg._id)
-                            }
+                            onClick={() => {
+                              deleteMessageForMe(msg.conversationId, msg._id);
+                              setActiveMenu(null);
+                            }}
                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50"
                           >
                             <UserMinus size={14} /> Delete for me
                           </button>
                           {isMe && (
                             <button
-                              onClick={() =>
+                              onClick={() => {
                                 deleteMessageFromEveryone(
                                   msg.conversationId,
                                   msg._id,
-                                )
-                              }
+                                );
+                              }}
                               className="w-full flex items-center gap-3 px-4 py-2 text-sm text-rose-600 font-semibold hover:bg-rose-50"
                             >
                               <Trash2 size={14} /> Delete for everyone
