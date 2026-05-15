@@ -77,7 +77,14 @@ export const deleteConversation = async (req, res) => {
         }
 
         // Mark the conversation as deleted for the user
-        await Conversation.findByIdAndUpdate(conversationId, { $push: { deletedBy: userId } });
+        const updatedConversation = await Conversation.findByIdAndUpdate(conversationId, { $push: { deletedBy: userId } }, { new: true });
+
+        if (updatedConversation.deletedBy.length >= updatedConversation.participants.length) {
+            
+            await Conversation.findByIdAndDelete(conversationId);
+            // Saath mein is conversation ke saare messages bhi delete kar dena chahiye
+            await Message.deleteMany({ conversationId });
+        }
 
         return res.status(200).json({ message: "Conversation deleted successfully", success: true });
     } catch (error) {

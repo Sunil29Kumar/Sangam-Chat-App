@@ -26,7 +26,7 @@ function MessageInputContainer({
     replyingData,
     editedMessage,
     setEditedMessage,
-    setReplyingData
+    setReplyingData,
   } = chatContext;
 
   const handleEditMessage = async () => {
@@ -142,6 +142,12 @@ function MessageInputContainer({
                   handleEditMessage();
                 } else {
                   handleSendMessage();
+                  setReplyingData({
+                    messageSender: {},
+                    replyToMessageId: "",
+                    replyToMessageText: "",
+                    conversationId: "",
+                  });
                 }
               }
             }}
@@ -160,6 +166,12 @@ function MessageInputContainer({
                 handleEditMessage();
               } else {
                 handleSendMessage();
+                setReplyingData({
+                  messageSender: {},
+                  replyToMessageId: "",
+                  replyToMessageText: "",
+                  conversationId: "",
+                });
               }
             }}
             disabled={!text.trim() && !editedMessage.content.trim()}

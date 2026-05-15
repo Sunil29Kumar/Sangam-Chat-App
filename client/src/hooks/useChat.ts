@@ -16,7 +16,7 @@ export const useChat = () => {
   const [loading, setLoading] = useState(false);
 
   if (!chatContext) return null;
-  const {getMessages, getConversations, setSelectedConversation, setMessages} =
+  const {getMessages, getConversations, setSelectedConversation, setMessages,setConversations} =
     chatContext;
 
   const searchUser = async (query: string) => {
@@ -53,8 +53,15 @@ export const useChat = () => {
   const deleteConversation = async (conversationId: string) => {
     try {
       const response = await deleteConversationAuth(conversationId);
-      showToast.success(response.message);
-      getConversations();
+      if(response?.success){
+        setConversations((prevConversations) =>
+          prevConversations.filter((conv) => conv._id !== conversationId)
+        );
+        // setSelectedConversation(null);
+        // setMessages([]);
+        showToast.success(response.message);
+      }
+      // getConversations();
       return response;
     } catch (error: string | any) {
       showToast.error(
