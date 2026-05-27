@@ -34,6 +34,10 @@ interface ChatContextType {
       conversationId: string;
     }>
   >;
+  isChatMenuOpen: boolean;
+  setIsChatMenuOpen: (value: boolean) => void;
+  selectedChatMenueOption: string;
+  setSelectedChatMenuOption: (option: string) => void;
 
   // function
   getConversations: () => Promise<any>;
@@ -71,6 +75,9 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
     messageId: "",
     conversationId: "",
   });
+
+  const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
+  const [selectedChatMenueOption, setSelectedChatMenuOption] = useState("");
 
   const getConversations = useCallback(async () => {
     setLoading(true);
@@ -167,6 +174,9 @@ export default function ChatProvider({children}: {children: React.ReactNode}) {
         updateLastMessageInList,
         editedMessage,
         setEditedMessage,
+        isChatMenuOpen,
+        setIsChatMenuOpen,
+        selectedChatMenueOption, setSelectedChatMenuOption
       }}
     >
       {children}

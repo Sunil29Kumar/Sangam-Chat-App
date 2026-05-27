@@ -30,7 +30,7 @@ const Dashboard = () => {
       <div
         className={`
           ${isMobile && selectedConversation ? "hidden" : "flex"}
-          w-full md:w-70 lg:w-80 flex-shrink-0
+          w-full md:w-70 lg:w-80 shrink-0
         `}
       >
         <ChatList setIsNewChatModalOpen={setIsNewChatModalOpen} />

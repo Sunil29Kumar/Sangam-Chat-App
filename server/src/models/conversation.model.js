@@ -41,6 +41,9 @@ const conversationSchema = new Schema({
 
 }, { timestamps: true });
 
+// index for faster retrieval of conversations for a user 
+conversationSchema.index({ participants: 1, updatedAt: -1 }); // For fetching user conversations fast
+
 
 const Conversation = mongoose.model('Conversation', conversationSchema);
 

@@ -48,6 +48,9 @@ function MessageArea({
   const [currentWindowHeight, setCurrentWindowHeight] = useState<number | null>(
     null,
   );
+  const [currentWindowWidth, setCurrentWindowWidth] = useState<number | null>(
+    null,
+  );
   const [menuBtnPosition, setMenuBtnPosition] = useState({y: 0, x: 0});
   const [isScrollButtonVisible, setIsScrollButtonVisible] = useState(false);
   const windowHeight = window.innerHeight;
@@ -211,14 +214,14 @@ function MessageArea({
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="  flex-1 overflow-y-auto p-4 md:p-6 space-y-8 bg-[#fafafa] custom-scrollbar relative   "
+      className="  flex-1 overflow-y-auto p-4 md:p-6 space-y-8 bg-[#fafafa] custom-scrollbar    "
     >
       {Object.keys(groupedMessages).length > 0 ? (
         <>
           {/* scroll to bottom button */}
           {isScrollButtonVisible && (
             <div
-              className={`fixed ${isReplyContainerOpen ? "bottom-35" : "bottom-24"} right-8 z-[100]`}
+              className={`fixed ${isReplyContainerOpen ? "bottom-55  md:bottom-35" : "bottom-30 md:bottom-15"}   z-100`}
             >
               <div
                 onClick={clickScrollBottom}
@@ -231,14 +234,6 @@ function MessageArea({
                   size={18}
                   className="text-indigo-600 group-hover:text-white transition-colors duration-300"
                 />
-
-                {/* Optional: Unread Message Badge */}
-                {/* <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-indigo-500 text-[10px] text-white items-center justify-center font-bold">
-                    1
-                  </span>
-                </span> */}
               </div>
             </div>
           )}
@@ -345,6 +340,7 @@ function MessageArea({
                                 console.log("cx", e.clientX, "cy", e.clientY);
                                 setMenuBtnPosition({x: e.pageX, y: e.pageY});
                                 setCurrentWindowHeight(e.clientY);
+                                setCurrentWindowWidth(e.clientX);
                               }}
                             />
                           </button>
@@ -432,17 +428,25 @@ function MessageArea({
                           style={{
                             // X-axis: Agar 'isMe' hai toh thoda left shift karo taaki menu icon ke upar na aaye
                             left:
-                              currentWindowHeight! > windowHeight - 250
+                              currentWindowHeight! > windowHeight / 2
                                 ? isMe
-                                  ? `${menuBtnPosition.x - 15}px`
-                                  : `${menuBtnPosition.x - 45}px`
+                                  ? currentWindowWidth! > windowWidth / 2
+                                    ? `${menuBtnPosition.x - 200}px`
+                                    : `${menuBtnPosition.x + 10}px`
+                                  : currentWindowWidth! > windowWidth / 2
+                                    ? `${menuBtnPosition.x - 200}px`
+                                    : `${menuBtnPosition.x + 1}px`
                                 : isMe
-                                  ? `${menuBtnPosition.x - 175}px`
-                                  : `${menuBtnPosition.x - 45}px`,
+                                  ? currentWindowWidth! > windowWidth / 2
+                                    ? `${menuBtnPosition.x - 175}px`
+                                    : `${menuBtnPosition.x - 5}px`
+                                  : currentWindowWidth! > windowWidth / 2
+                                    ? `${menuBtnPosition.x - 180}px`
+                                    : `${menuBtnPosition.x - 5}px`,
 
                             // Y-axis: Agar screen ke bahut niche hai toh menu ko upar shift kar do
                             top:
-                              currentWindowHeight! > windowHeight - 250
+                              currentWindowHeight! > windowHeight / 2
                                 ? isMe
                                   ? `${menuBtnPosition.y - 190}px`
                                   : `${menuBtnPosition.y - 151}px`

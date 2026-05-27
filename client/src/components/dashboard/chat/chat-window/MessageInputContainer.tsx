@@ -1,5 +1,12 @@
-import {ClosedCaption, CrossIcon, Send, Smile} from "lucide-react";
-import React, {useContext} from "react";
+import {
+  ClosedCaption,
+  CrossIcon,
+  Send,
+  Smile,
+  Speech,
+  SpeechIcon,
+} from "lucide-react";
+import React, {useContext, useEffect} from "react";
 import {IoMdClose} from "react-icons/io";
 import {ChatContext} from "../../../../context/ChatContext";
 import {useChat} from "../../../../hooks/useChat";
@@ -45,6 +52,7 @@ function MessageInputContainer({
       setText(""); // normal text ko bhi clear kar do safe side ke liye
     }
   };
+
 
   return (
     <div className=" py:0 px-3 md:py-1 shrink-0 min-w-0 w-full overflow-hidden mb-18 md:mb-0  ">
@@ -175,18 +183,28 @@ function MessageInputContainer({
               }
             }}
             disabled={!text.trim() && !editedMessage.content.trim()}
-            className={`w-11 h-11 flex items-center justify-center rounded-full transition-all shadow-lg active:scale-90 ${
+            className={`w-10 h-10  md:w-10 md:h-11 flex items-center justify-center rounded-full transition-all shadow-lg active:scale-90 ${
               text.trim() || editedMessage.content.trim()
-                ? "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700"
-                : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                ? "md:bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700"
+                : "md:bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
             }`}
           >
+            
             <Send
               size={18}
               fill={text.trim() ? "currentColor" : "none"}
               className={text.trim() ? "ml-0.5" : ""}
             />
           </button>
+          <button>
+            <SpeechIcon size={25} className="" />
+          </button>
+          {/* <button>
+            <ClosedCaption
+              size={22}
+              className="text-slate-400 hover:text-indigo-500 p-2 transition-colors"
+            />
+          </button> */}
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ const MessageSchema = new mongoose.Schema({
     isDelivered: { type: Boolean, default: false },
     readedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     // For Message Deletion
-    deletedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', }],
+    deletedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     // For Replying to Messages
     replyTo: {
         messageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
@@ -18,6 +18,12 @@ const MessageSchema = new mongoose.Schema({
     },
     isEdited: { type: Boolean, default: false }
 }, { timestamps: true });
+
+// index for faster retrieval of messages in a conversation
+MessageSchema.index({ conversationId: 1 });
+MessageSchema.index({ conversationId: 1, createdAt: 1 });
+MessageSchema.index({ sender: 1, createdAt: 1 });
+MessageSchema.index({ content: "text", createdAt: 1 });
 
 const Message = mongoose.model('Message', MessageSchema);
 export default Message;
