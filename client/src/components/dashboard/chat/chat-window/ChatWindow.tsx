@@ -54,10 +54,10 @@ const ChatWindow = () => {
   if (!authContext) return null;
   const {user} = authContext;
 
-  console.log("online user ", onlineUsers);
-  console.log("messages =", messages);
+  // console.log("online user ", onlineUsers);
+  // console.log("messages =", messages);
 
-  console.log("selectedconversition =", selectedConversation);
+  // console.log("selectedconversition =", selectedConversation);
 
   const handleSendMessage = () => {
     if (!text.trim() || !selectedConversation) return;
@@ -187,7 +187,7 @@ const ChatWindow = () => {
   return (
     <div
       onClick={() => setIsChatMenuOpen(false)}
-      className="flex w-full h-dvh max-h-dvh overflow-hidden bg-[#fafafa]"
+      className="flex w-full h-full max-h-full overflow-hidden bg-[#fafafa]"
     >
       {/* ─── YAHAN CHANGE KIYA HAI: 'hidden' ko hata kar width aur transform lagaya hai ─── */}
       <div
@@ -262,6 +262,7 @@ const ChatWindow = () => {
 
               {/* chat menu component  */}
               {isChatMenuOpen && <ChatMenu />}
+              {/* {isChatMenuOpen && <ChatMenu />} */}
             </div>
           </div>
         </div>

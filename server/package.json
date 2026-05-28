@@ -9,6 +9,7 @@
     "dev": "nodemon src/app.js"
   },
   "dependencies": {
+    "axios": "^1.16.1",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cookieparser": "^0.1.0",
@@ -19,8 +20,10 @@
     "jsdom": "^29.0.1",
     "mongodb": "^7.1.1",
     "mongoose": "^9.3.3",
+    "multer": "^2.1.1",
     "node-cron": "^4.2.1",
     "resend": "^6.10.0",
+    "sarvamai": "^1.1.7",
     "socket.io": "^4.8.3",
     "zod": "^4.3.6"
   }

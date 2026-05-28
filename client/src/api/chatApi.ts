@@ -153,3 +153,25 @@ export const editMessageAuth = async (
     );
   }
 };
+
+export const convertSpeechToTextAuth = async (audioBlob: Blob) => {
+  const formData = new FormData();
+  // .wav ya .webm format browser ke recorder ke mutabik
+  formData.append("audio", audioBlob, "voice_input.wav");
+
+  try {
+    const response = await axios.post("/media/speech-to-text", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    return (
+      error?.response.data || {
+        success: false,
+        message: "An error occurred while converting audio to text.",
+      }
+    );
+  }
+};

@@ -52,7 +52,7 @@ const ChatList = ({
   const {joinRoom, socket} = useSocket();
   const [isConvMenuOpen, setIsConvMenuOpen] = useState(false);
 
-  console.log("conversition = ", conversations);
+  // console.log("conversition = ", conversations);
 
   // Filter conversations based on search
   const filteredConversations = conversations?.filter((c: any) =>

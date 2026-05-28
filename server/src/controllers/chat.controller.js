@@ -50,7 +50,7 @@ export const createConversation = async (req, res) => {
             participants: [senderId, recipientId]
         });
 
-        console.log(newConversation);
+        // console.log(newConversation);
 
 
         await newConversation.save();

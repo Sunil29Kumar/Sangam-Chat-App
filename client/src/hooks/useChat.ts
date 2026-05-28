@@ -1,5 +1,6 @@
 import {useContext, useState} from "react";
 import {
+  convertSpeechToTextAuth,
   createConversationAuth,
   deleteConversationAuth,
   deleteMessageFromEveryoneAuth,
@@ -16,8 +17,13 @@ export const useChat = () => {
   const [loading, setLoading] = useState(false);
 
   if (!chatContext) return null;
-  const {getMessages, getConversations, setSelectedConversation, setMessages,setConversations} =
-    chatContext;
+  const {
+    getMessages,
+    getConversations,
+    setSelectedConversation,
+    setMessages,
+    setConversations,
+  } = chatContext;
 
   const searchUser = async (query: string) => {
     setLoading(true);
@@ -53,9 +59,9 @@ export const useChat = () => {
   const deleteConversation = async (conversationId: string) => {
     try {
       const response = await deleteConversationAuth(conversationId);
-      if(response?.success){
+      if (response?.success) {
         setConversations((prevConversations) =>
-          prevConversations.filter((conv) => conv._id !== conversationId)
+          prevConversations.filter((conv) => conv._id !== conversationId),
         );
         // setSelectedConversation(null);
         // setMessages([]);
@@ -165,6 +171,31 @@ export const useChat = () => {
     }
   };
 
+  const convertSpeechToText = async (audioBlob: Blob) => {
+    try {
+      const formData = new FormData();
+      // .wav ya .webm format browser ke recorder ke mutabik
+      formData.append("audio", audioBlob, "voice_input.wav");
+      
+      const response = await convertSpeechToTextAuth(audioBlob);
+      if (response?.success) {
+        // showToast.success(
+        //   response.message || "Speech converted to text successfully.",
+        // );
+      } else {
+        showToast.error(
+          response?.message || "Failed to convert speech to text.",
+        );
+      }
+      return response;
+    } catch (error) {
+      showToast.error(
+        error?.message || "An error occurred while converting speech to text.",
+      );
+      return "";
+    }
+  };
+
   return {
     searchUser,
     createConversation,
@@ -174,5 +205,6 @@ export const useChat = () => {
     deleteMessageForMe,
     editMessage,
     loading,
+    convertSpeechToText,
   };
 };

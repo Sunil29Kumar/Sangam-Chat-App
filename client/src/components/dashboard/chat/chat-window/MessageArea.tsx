@@ -337,7 +337,7 @@ function MessageArea({
                               className="text-slate-600 cursor-pointer "
                               onClick={(e) => {
                                 setActiveMenu(isMenuOpen ? null : msg._id);
-                                console.log("cx", e.clientX, "cy", e.clientY);
+                                // console.log("cx", e.clientX, "cy", e.clientY);
                                 setMenuBtnPosition({x: e.pageX, y: e.pageY});
                                 setCurrentWindowHeight(e.clientY);
                                 setCurrentWindowWidth(e.clientX);
