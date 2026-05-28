@@ -10,17 +10,10 @@ import { speechToText } from "../controllers/media.controller.js";
 // });
 
 
-const uploadDir = "uploads/";
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const upload = multer({
-    dest: uploadDir,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB safety limit
-});
-
 const router = express.Router()
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 router.post("/speech-to-text", upload.single("audio"), speechToText);
 
