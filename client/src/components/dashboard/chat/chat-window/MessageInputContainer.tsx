@@ -10,6 +10,7 @@ import React, {useContext, useEffect, useRef, useState} from "react";
 import {IoMdClose} from "react-icons/io";
 import {ChatContext} from "../../../../context/ChatContext";
 import {useChat} from "../../../../hooks/useChat";
+import {showToast} from "../../../../utils/toast";
 
 function MessageInputContainer({
   text,
@@ -41,13 +42,12 @@ function MessageInputContainer({
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  let recordingTimeout;
 
   // ─── AUDIO RECORDING LOGIC (UPDATED & FIXED) ───
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-
-      // Browser ke according supportable format choose karein (Chrome/Safari/Firefox sync)
       const mimeType = MediaRecorder.isTypeSupported("audio/webm")
         ? "audio/webm"
         : "audio/ogg";
@@ -68,14 +68,22 @@ function MessageInputContainer({
           type: mediaRecorder.mimeType,
         });
 
+        const {isValid, reason} = await validateAudio(audioBlob);
+
+        if (!isValid) {
+          showToast.error(reason || "Please try again or speak clearly.");
+          return;
+        }
+
+        // 3. Agar valid hai, toh bindaas backend ko push karo
+        // console.log("✅ Audio valid hai, sending to Sarvam AI via backend...");
+
         // Loader chalu karein
         setIsProcessingAudio(true);
 
         try {
           // Backend API ko call karein
           const res = await convertSpeechToText(audioBlob);
-
-          // SAFE CHECK: Backend se chahe 'text' aaye ya 'transcript', dono ko handle karein
           const parsedText = res?.text || res?.transcript;
 
           if (res && res.success && parsedText) {
@@ -91,16 +99,15 @@ function MessageInputContainer({
               setText((prev) => (prev ? prev + " " + parsedText : parsedText));
             }
           } else {
-            alert(
-              "Sarvam AI se speech-to-text conversion failed. Kripya try karein.",
-            );
+            showToast.error(res?.message || "Please try again.");
           }
         } catch (apiError) {
-          // console.error("API Error while processing STT:", apiError);
-          alert("Server communication failed. Kripya fir se try karein.");
+          showToast.error(
+            apiError?.message ||
+              "Server communication failed. Please try again.",
+          );
         } finally {
           setIsProcessingAudio(false);
-          // Stream tracks ko close karein taaki browser ka red mic dot permanent hat jaye
           stream.getTracks().forEach((track) => track.stop());
         }
       };
@@ -108,13 +115,76 @@ function MessageInputContainer({
       // 10ms ke interval par data collection start karein taaki bits bypass na hon
       mediaRecorder.start(10);
       setIsRecording(true);
+
+      const MAX_DURATION = 30000; // 30000 milliseconds = 30 seconds
+
+      recordingTimeout = setTimeout(() => {
+        console.log("⏱️ 30 seconds complete! Auto-stopping recording...");
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+          mediaRecorder.stop(); // Ye automatically 'onstop' event ko fire kar dega
+          // alert(
+          //   "⏰ Max limit 30 seconds ki hai, recording automatically stop ho gayi hai.",
+          // );
+          // stopRecording();
+          // setIsRecording(false);
+        }
+      }, MAX_DURATION);
     } catch (err) {
-      // console.error("Mic permission denied or error:", err);
-      alert("Mic access allow kijiye pehle!");
+      showToast.error(
+        err?.message || "Microphone access is required for voice input.",
+      );
+    }
+  };
+
+  // Blob ko decode karke check karega ki audio silent hai ya nahi
+  const validateAudio = async (audioBlob) => {
+    try {
+      // 1. Blob ko ArrayBuffer mein convert karein
+      const arrayBuffer = await audioBlob.arrayBuffer();
+
+      // 2. AudioContext banayein taaki browser compressed data (WebM) ko decode kar sake
+      const audioContext = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
+
+      // 3. Raw PCM Data (AudioBuffer object) mein decode karein
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+      // 4. Pehle channel (mono) ka raw floating-point amplitude data nikalen
+      const rawChannelData = audioBuffer.getChannelData(0);
+
+      let totalAmplitude = 0;
+
+      // 5. Poori file ke amplitudes ka average (RMS) nikalein
+      for (let i = 0; i < rawChannelData.length; i++) {
+        totalAmplitude += Math.abs(rawChannelData[i]);
+      }
+
+      const averageVolume = totalAmplitude / rawChannelData.length;
+      // console.log("🎤 Final Decoded Audio Average Volume:", averageVolume);
+
+      // Cleanup context to free memory
+      await audioContext.close();
+
+      const SILENCE_THRESHOLD = 0.008;
+
+      if (averageVolume < SILENCE_THRESHOLD) {
+        stopRecording(); // Agar silent hai toh recording turant stop kar do
+        setIsRecording(false);
+        playStopSound(); // Stop sound play karo taaki user ko feedback mile
+        return {isValid: false, reason: "Empty/Silent audio note"};
+      }
+
+      return {isValid: true};
+    } catch (error) {
+      // console.error("Audio validation failed:", error.message);
+      // Agar kisi wajah se browser decode na kar paye, toh safe side rehne ke liye true bhej do
+      return {isValid: true};
     }
   };
 
   const stopRecording = () => {
+    if (recordingTimeout) clearTimeout(recordingTimeout);
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
@@ -122,17 +192,13 @@ function MessageInputContainer({
   };
 
   const playStartSound = () => {
-    const audio = new Audio(
-      "./start.mp3",
-    );
+    const audio = new Audio("./start.mp3");
     audio.volume = 0.4; // Volume thoda soft rakhein taaki kaan me na chubhe
     audio.play().catch((err) => console.log("Audio play blocked:", err));
   };
 
   const playStopSound = () => {
-    const audio = new Audio(
-      "./end.mp3",
-    );
+    const audio = new Audio("./start.mp3");
     audio.volume = 0.4;
     audio.play().catch((err) => console.log("Audio play blocked:", err));
   };

@@ -1,17 +1,15 @@
 import { SarvamAIClient } from "sarvamai";
 import { Readable } from "stream";
+import { sarvamSpeechToText } from "../services/sarvam.service.js";
 
-const client = new SarvamAIClient({
-    apiSubscriptionKey: process.env.SARVAMAI_API_KEY,
-});
 
 export const speechToText = async (req, res) => {
     try {
         const audioFile = req.file;
 
-        if (!audioFile) {
-            return res.status(400).json({ message: "No audio file uploaded", success: false });
-        }
+        if (!audioFile) return res.status(400).json({ message: "No audio file uploaded", success: false });
+
+        if (audioFile.size < 10 * 1024) return res.status(400).json({ message: "Validation failed: Audio stream is too short or silent.", success: false });
 
         const fileStream = new Readable();
         fileStream.push(audioFile.buffer);
@@ -22,15 +20,7 @@ export const speechToText = async (req, res) => {
             writable: false
         });
 
-        // console.log("Transcribing memory stream via Sarvam SDK...");
-
-        const response = await client.speechToText.transcribe({
-            file: fileStream,
-            model: "saaras:v3",
-            mode: "transcribe"
-        });
-
-        // console.log("Sarvam SDK Core Execution Success:", response);
+        const response = await sarvamSpeechToText(fileStream);
 
         return res.status(200).json({
             success: true,
@@ -38,12 +28,12 @@ export const speechToText = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Critical Error inside Sarvam SDK pipeline:", error.message);
+        // console.error("Server Error:", error.message);
 
         return res.status(500).json({
-            message: "Internal server error during transcription pipeline",
+            message: "Internal server error ",
             success: false,
-            error: error.message
+            // error: error.message
         });
     }
 }
