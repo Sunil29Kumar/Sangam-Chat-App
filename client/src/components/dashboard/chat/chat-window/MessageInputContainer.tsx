@@ -1,16 +1,10 @@
-import {
-  ClosedCaption,
-  CrossIcon,
-  Send,
-  Smile,
-  Speech,
-  SpeechIcon,
-} from "lucide-react";
-import React, {useContext, useEffect, useRef, useState} from "react";
+import {ClosedCaption, Send, Smile, SpeechIcon} from "lucide-react";
+import React, {useContext, useState} from "react";
 import {IoMdClose} from "react-icons/io";
 import {ChatContext} from "../../../../context/ChatContext";
 import {useChat} from "../../../../hooks/useChat";
-import {showToast} from "../../../../utils/toast";
+import {useAudioToText} from "../../../../hooks/useAudioToText";
+import dictionaryArray from "../../../../../contents//dictionaryArray.json";
 
 function MessageInputContainer({
   text,
@@ -26,7 +20,14 @@ function MessageInputContainer({
   scrollToReplayedMessage: (messageId: string) => void;
 }) {
   const chatContext = useContext(ChatContext);
-  const {editMessage, convertSpeechToText} = useChat();
+  const {editMessage} = useChat();
+
+  // MdSettingsSuggest
+  const [suggestedMessageData, setSuggestedMessageData] = useState([]);
+
+  const {isRecording, isProcessingAudio, handleMicClick} =
+    useAudioToText({setText});
+
   if (!chatContext) return null;
   const {
     isReplyContainerOpen,
@@ -37,185 +38,10 @@ function MessageInputContainer({
     setReplyingData,
   } = chatContext;
 
-  // ─── SPEECH TO TEXT STATES ───
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  let recordingTimeout;
 
-  // ─── AUDIO RECORDING LOGIC (UPDATED & FIXED) ───
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm")
-        ? "audio/webm"
-        : "audio/ogg";
-
-      const mediaRecorder = new MediaRecorder(stream, {mimeType});
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        // Sahi format ke sath binary blob taiyar karein
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: mediaRecorder.mimeType,
-        });
-
-        const {isValid, reason} = await validateAudio(audioBlob);
-
-        if (!isValid) {
-          showToast.error(reason || "Please try again or speak clearly.");
-          return;
-        }
-
-        // 3. Agar valid hai, toh bindaas backend ko push karo
-        // console.log("✅ Audio valid hai, sending to Sarvam AI via backend...");
-
-        // Loader chalu karein
-        setIsProcessingAudio(true);
-
-        try {
-          // Backend API ko call karein
-          const res = await convertSpeechToText(audioBlob);
-          const parsedText = res?.text || res?.transcript;
-
-          if (res && res.success && parsedText) {
-            // Agar message edit mode mein hai toh edited content update karo, nahi toh normal text
-            if (editedMessage.messageId) {
-              setEditedMessage({
-                ...editedMessage,
-                content: editedMessage.content
-                  ? editedMessage.content + " " + parsedText
-                  : parsedText,
-              });
-            } else {
-              setText((prev) => (prev ? prev + " " + parsedText : parsedText));
-            }
-          } else {
-            showToast.error(res?.message || "Please try again.");
-          }
-        } catch (apiError) {
-          showToast.error(
-            apiError?.message ||
-              "Server communication failed. Please try again.",
-          );
-        } finally {
-          setIsProcessingAudio(false);
-          stream.getTracks().forEach((track) => track.stop());
-        }
-      };
-
-      // 10ms ke interval par data collection start karein taaki bits bypass na hon
-      mediaRecorder.start(10);
-      setIsRecording(true);
-
-      const MAX_DURATION = 30000; // 30000 milliseconds = 30 seconds
-
-      recordingTimeout = setTimeout(() => {
-        console.log("⏱️ 30 seconds complete! Auto-stopping recording...");
-        if (mediaRecorder && mediaRecorder.state !== "inactive") {
-          mediaRecorder.stop(); // Ye automatically 'onstop' event ko fire kar dega
-          // alert(
-          //   "⏰ Max limit 30 seconds ki hai, recording automatically stop ho gayi hai.",
-          // );
-          // stopRecording();
-          // setIsRecording(false);
-        }
-      }, MAX_DURATION);
-    } catch (err) {
-      showToast.error(
-        err?.message || "Microphone access is required for voice input.",
-      );
-    }
-  };
-
-  // Blob ko decode karke check karega ki audio silent hai ya nahi
-  const validateAudio = async (audioBlob) => {
-    try {
-      // 1. Blob ko ArrayBuffer mein convert karein
-      const arrayBuffer = await audioBlob.arrayBuffer();
-
-      // 2. AudioContext banayein taaki browser compressed data (WebM) ko decode kar sake
-      const audioContext = new (
-        window.AudioContext || window.webkitAudioContext
-      )();
-
-      // 3. Raw PCM Data (AudioBuffer object) mein decode karein
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-      // 4. Pehle channel (mono) ka raw floating-point amplitude data nikalen
-      const rawChannelData = audioBuffer.getChannelData(0);
-
-      let totalAmplitude = 0;
-
-      // 5. Poori file ke amplitudes ka average (RMS) nikalein
-      for (let i = 0; i < rawChannelData.length; i++) {
-        totalAmplitude += Math.abs(rawChannelData[i]);
-      }
-
-      const averageVolume = totalAmplitude / rawChannelData.length;
-      // console.log("🎤 Final Decoded Audio Average Volume:", averageVolume);
-
-      // Cleanup context to free memory
-      await audioContext.close();
-
-      const SILENCE_THRESHOLD = 0.008;
-
-      if (averageVolume < SILENCE_THRESHOLD) {
-        stopRecording(); // Agar silent hai toh recording turant stop kar do
-        setIsRecording(false);
-        playStopSound(); // Stop sound play karo taaki user ko feedback mile
-        return {isValid: false, reason: "Empty/Silent audio note"};
-      }
-
-      return {isValid: true};
-    } catch (error) {
-      // console.error("Audio validation failed:", error.message);
-      // Agar kisi wajah se browser decode na kar paye, toh safe side rehne ke liye true bhej do
-      return {isValid: true};
-    }
-  };
-
-  const stopRecording = () => {
-    if (recordingTimeout) clearTimeout(recordingTimeout);
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-
-  const playStartSound = () => {
-    const audio = new Audio("./start.mp3");
-    audio.volume = 0.4; // Volume thoda soft rakhein taaki kaan me na chubhe
-    audio.play().catch((err) => console.log("Audio play blocked:", err));
-  };
-
-  const playStopSound = () => {
-    const audio = new Audio("./start.mp3");
-    audio.volume = 0.4;
-    audio.play().catch((err) => console.log("Audio play blocked:", err));
-  };
-
-  const handleMicClick = () => {
-    if (isRecording) {
-      playStopSound();
-      stopRecording();
-    } else {
-      playStartSound();
-      startRecording();
-    }
-  };
-
+  // ── EDIT MESSAGE LOGIC ──
   const handleEditMessage = async () => {
     if (!editedMessage.content.trim()) return;
-    console.log("em 2", editedMessage.content);
 
     const response = await editMessage(
       editedMessage.conversationId,
@@ -230,11 +56,106 @@ function MessageInputContainer({
     }
   };
 
+  // suggestion message
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    if (editedMessage.messageId) {
+      setEditedMessage({...editedMessage, content: val});
+    }
+    setText(val);
+    handleTyping();
+
+    if (val.trim() == "") {
+      setSuggestedMessageData([]);
+      return;
+    }
+
+    const word = val.split(" ");
+    const lastWord = word[word.length - 1].toLowerCase();
+
+    if (lastWord.length >= 2) {
+      const matches = dictionaryArray
+        .filter((item) => {
+          return (
+            item.toLowerCase().startsWith(lastWord) &&
+            item.toLowerCase() !== lastWord
+          );
+        })
+        .slice(0, 5);
+
+      if (matches.length > 0) {
+        setSuggestedMessageData(matches);
+      } else {
+        setSuggestedMessageData([]);
+      }
+    }
+
+    e.target.style.height = "auto";
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
+  };
+
+  const handleSubmit = () => {
+    if (editedMessage.messageId) {
+      handleEditMessage();
+    } else {
+      handleSendMessage();
+      setSuggestedMessageData([]);
+      setReplyingData({
+        messageSender: {},
+        replyToMessageId: "",
+        replyToMessageText: "",
+        conversationId: "",
+      });
+    }
+  };
+
   return (
     <div className=" py:0 px-3 md:py-1 shrink-0 min-w-0 w-full overflow-hidden mb-18 md:mb-0  ">
       {/* --- Message Input Container --- */}
 
       <div className=" bg-white py-2 px-3 rounded-[1.8rem] border-2 border-slate-50 flex flex-col gap-2 overflow-hidden flex-nowrap w-full shadow-sm ">
+        {/* suggested message  */}
+        {suggestedMessageData.length > 0 && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-indigo-50/70 via-slate-50/50 to-indigo-50/70 border-b border-slate-100/80 -mx-3 -mt-2 mb-1 animate-fadeIn">
+            {/* Left Icon with subtle glow */}
+            <div className="flex items-center justify-center w-6 h-6 rounded-md bg-indigo-100/80 text-indigo-600 shrink-0 shadow-sm animate-pulse">
+              <ClosedCaption size={14} className="stroke-[2.5]" />
+            </div>
+
+            {/* Horizontal Scrollable Chips Box */}
+            <div className="flex gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-0.5">
+              {suggestedMessageData.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    const currentText = editedMessage.messageId
+                      ? editedMessage.content
+                      : text;
+                    const words = currentText.trim().split(" ");
+                    let lastWord = words[words.length - 1] || "";
+
+                    // Core replacement mechanism
+                    const newText =
+                      currentText.trim().slice(0, -lastWord.length) +
+                      suggestion +
+                      " ";
+
+                    if (editedMessage.messageId) {
+                      setEditedMessage({...editedMessage, content: newText});
+                    } else {
+                      setText(newText);
+                    }
+                    setSuggestedMessageData([]);
+                  }}
+                  className="bg-white hover:bg-indigo-600 border border-slate-200/80 hover:border-indigo-600 text-slate-700 hover:text-white font-medium text-xs px-3 py-1 rounded-full shadow-sm active:scale-95 transition-all duration-200 whitespace-nowrap tracking-wide"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* reply container  */}
         {isReplyContainerOpen && (
           <div className=" flex justify-between px-3 py-2 bg-gray-100 rounded-md ">
@@ -348,17 +269,7 @@ function MessageInputContainer({
             <input
               type="text"
               value={editedMessage.messageId ? editedMessage.content : text}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (editedMessage.messageId) {
-                  setEditedMessage({...editedMessage, content: val});
-                } else {
-                  setText(val);
-                }
-                handleTyping();
-                e.target.style.height = "auto";
-                e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
-              }}
+              onChange={(e) => handleInputChange(e)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   if (editedMessage.messageId) {
@@ -385,19 +296,7 @@ function MessageInputContainer({
 
           {/* --------------- submit ---------  */}
           <button
-            onClick={() => {
-              if (editedMessage.messageId) {
-                handleEditMessage();
-              } else {
-                handleSendMessage();
-                setReplyingData({
-                  messageSender: {},
-                  replyToMessageId: "",
-                  replyToMessageText: "",
-                  conversationId: "",
-                });
-              }
-            }}
+            onClick={() => handleSubmit()}
             disabled={!text.trim() && !editedMessage.content.trim()}
             className={`w-10 h-10  md:w-10 md:h-11 flex items-center justify-center rounded-full transition-all shadow-lg active:scale-90 ${
               text.trim() || editedMessage.content.trim()
