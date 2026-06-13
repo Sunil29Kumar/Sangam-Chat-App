@@ -30,7 +30,7 @@ const ChatWindow = () => {
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  let typingTimeout: any;
+  let typingTimeout = useRef<any>(null);
 
   if (!socketContext) return null;
   const {onlineUsers} = socketContext;
@@ -95,17 +95,24 @@ const ChatWindow = () => {
 
   // handle Typing status
   const handleTyping = () => {
+    if (!selectedConversation || !socket) return;
     socket?.emit("typing", {
       conversationId: selectedConversation._id,
       senderName: user.name,
     });
 
-    if (typingTimeout) clearTimeout(typingTimeout);
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
 
-    typingTimeout = setTimeout(() => {
+    typingTimeout.current = setTimeout(() => {
       socket?.emit("stop_typing", {conversationId: selectedConversation._id});
     }, 2000);
   };
+  // Cleanup timeout on unmount to prevent leaks
+  useEffect(() => {
+    return () => {
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!socket) return;

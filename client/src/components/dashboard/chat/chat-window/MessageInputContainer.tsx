@@ -1,10 +1,12 @@
 import {ClosedCaption, Send, Smile, SpeechIcon} from "lucide-react";
-import React, {useContext, useState} from "react";
+import React, {useCallback, useContext, useState} from "react";
 import {IoMdClose} from "react-icons/io";
 import {ChatContext} from "../../../../context/ChatContext";
 import {useChat} from "../../../../hooks/useChat";
 import {useAudioToText} from "../../../../hooks/useAudioToText";
 import dictionaryArray from "../../../../../contents//dictionaryArray.json";
+import SuggestionBar from "./message-input-components/SuggestionBar";
+import ReplyPreview from "./message-input-components/ReplyPreview";
 
 function MessageInputContainer({
   text,
@@ -19,14 +21,15 @@ function MessageInputContainer({
   handleTyping: () => void;
   scrollToReplayedMessage: (messageId: string) => void;
 }) {
+  // Context and Hooks
   const chatContext = useContext(ChatContext);
   const {editMessage} = useChat();
+  const {isRecording, isProcessingAudio, handleMicClick} = useAudioToText({
+    setText,
+  });
 
-  // MdSettingsSuggest
+  // States
   const [suggestedMessageData, setSuggestedMessageData] = useState([]);
-
-  const {isRecording, isProcessingAudio, handleMicClick} =
-    useAudioToText({setText});
 
   if (!chatContext) return null;
   const {
@@ -38,9 +41,8 @@ function MessageInputContainer({
     setReplyingData,
   } = chatContext;
 
-
   // ── EDIT MESSAGE LOGIC ──
-  const handleEditMessage = async () => {
+  const handleEditMessage = useCallback(async () => {
     if (!editedMessage.content.trim()) return;
 
     const response = await editMessage(
@@ -54,7 +56,7 @@ function MessageInputContainer({
       setEditedMessage({content: "", messageId: "", conversationId: ""});
       setText(""); // normal text ko bhi clear kar do safe side ke liye
     }
-  };
+  }, [editedMessage, setEditedMessage, setText, editMessage]);
 
   // suggestion message
   const handleInputChange = (e) => {
@@ -94,7 +96,7 @@ function MessageInputContainer({
     e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (editedMessage.messageId) {
       handleEditMessage();
     } else {
@@ -107,7 +109,13 @@ function MessageInputContainer({
         conversationId: "",
       });
     }
-  };
+  }, [
+    editedMessage,
+    handleEditMessage,
+    handleSendMessage,
+    setSuggestedMessageData,
+    setReplyingData,
+  ]);
 
   return (
     <div className=" py:0 px-3 md:py-1 shrink-0 min-w-0 w-full overflow-hidden mb-18 md:mb-0  ">
@@ -115,77 +123,23 @@ function MessageInputContainer({
 
       <div className=" bg-white py-2 px-3 rounded-[1.8rem] border-2 border-slate-50 flex flex-col gap-2 overflow-hidden flex-nowrap w-full shadow-sm ">
         {/* suggested message  */}
-        {suggestedMessageData.length > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-indigo-50/70 via-slate-50/50 to-indigo-50/70 border-b border-slate-100/80 -mx-3 -mt-2 mb-1 animate-fadeIn">
-            {/* Left Icon with subtle glow */}
-            <div className="flex items-center justify-center w-6 h-6 rounded-md bg-indigo-100/80 text-indigo-600 shrink-0 shadow-sm animate-pulse">
-              <ClosedCaption size={14} className="stroke-[2.5]" />
-            </div>
-
-            {/* Horizontal Scrollable Chips Box */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-0.5">
-              {suggestedMessageData.map((suggestion, index) => (
-                <button
-                  key={index}
-                  onClick={(e) => {
-                    const currentText = editedMessage.messageId
-                      ? editedMessage.content
-                      : text;
-                    const words = currentText.trim().split(" ");
-                    let lastWord = words[words.length - 1] || "";
-
-                    // Core replacement mechanism
-                    const newText =
-                      currentText.trim().slice(0, -lastWord.length) +
-                      suggestion +
-                      " ";
-
-                    if (editedMessage.messageId) {
-                      setEditedMessage({...editedMessage, content: newText});
-                    } else {
-                      setText(newText);
-                    }
-                    setSuggestedMessageData([]);
-                  }}
-                  className="bg-white hover:bg-indigo-600 border border-slate-200/80 hover:border-indigo-600 text-slate-700 hover:text-white font-medium text-xs px-3 py-1 rounded-full shadow-sm active:scale-95 transition-all duration-200 whitespace-nowrap tracking-wide"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <SuggestionBar
+          suggestedMessageData={suggestedMessageData}
+          text={text}
+          editedMessage={editedMessage}
+          setText={setText}
+          setSuggestedMessageData={setSuggestedMessageData}
+          setEditedMessage={setEditedMessage}
+        />
 
         {/* reply container  */}
-        {isReplyContainerOpen && (
-          <div className=" flex justify-between px-3 py-2 bg-gray-100 rounded-md ">
-            <p>
-              <span>{replyingData?.messageSender?.name || "You"}</span>
-              <h3
-                onClick={() =>
-                  scrollToReplayedMessage(replyingData.replyToMessageId)
-                }
-                className=" cursor-pointer bg-blue-100 w-full p-2 rounded-md  "
-              >
-                {replyingData?.replyToMessageText.length > 50
-                  ? replyingData?.replyToMessageText.substring(0, 50) + "..."
-                  : replyingData?.replyToMessageText}
-              </h3>
-            </p>
-            <IoMdClose
-              onClick={() => {
-                setIsReplyContainerOpen(false);
-                setReplyingData({
-                  messageSender: {},
-                  replyToMessageId: "",
-                  replyToMessageText: "",
-                  conversationId: "",
-                });
-              }}
-              className=" cursor-pointer "
-            />
-          </div>
-        )}
+        <ReplyPreview
+          isReplyContainerOpen={isReplyContainerOpen}
+          replyingData={replyingData}
+          scrollToReplayedMessage={scrollToReplayedMessage}
+          setIsReplyContainerOpen={setIsReplyContainerOpen}
+          setReplyingData={setReplyingData}
+        />
 
         {/* input container  */}
         <div className=" flex items-center gap-3  ">

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import AddUser from "./AddUser";
 import {ChatContext} from "../../../../context/ChatContext";
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useMemo, useState} from "react";
 import {useSocket} from "../../../../hooks/useSocket";
 import {formatTime} from "../../../../utils/formatTime";
 import {AuthContext} from "../../../../context/AuthContext";
@@ -52,18 +52,21 @@ const ChatList = ({
   const {joinRoom, socket} = useSocket();
   const [isConvMenuOpen, setIsConvMenuOpen] = useState(false);
 
-  // console.log("conversition = ", conversations);
-
   // Filter conversations based on search
-  const filteredConversations = conversations?.filter((c: any) =>
-    c.otherParticipant?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredDeletedConversations = useMemo(() => {
+    if (!conversations) return [];
 
-  const filteredDeletedConversations = filteredConversations?.filter(
-    (c: any) => !c.deletedBy?.includes((user as any)._id),
-  );
+    return conversations.filter((c: any) => {
+      const isDeleted = c.deletedBy?.includes((user as any)?._id);
+      if (isDeleted) return false;
 
-  // console.log(filteredDeletedConversations);
+      const matchesSearch = c.otherParticipant?.name
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+      return matchesSearch;
+    });
+  }, [conversations, searchQuery, user]);
 
   const handleConversationClick = (conv: any) => {
     setSelectedConversation(conv); // Right window update hogi
@@ -227,8 +230,14 @@ const ChatList = ({
                 <div className="flex-1 min-w-0">
                   {/* name and time  */}
                   <div className="flex justify-between items-baseline">
-                    <h4 className=" text-slate-800 truncate text-sm tracking-tight group-hover:text-indigo-700 transition-colors">
+                    <h4 className=" text-slate-800 truncate flex gap-2 items-center text-sm tracking-tight group-hover:text-indigo-700 transition-colors">
                       {conversation.otherParticipant?.name}
+                      {isTyping &&
+                      selectedConversation?._id === conversation._id ? (
+                        <span className="text-[10px] font-bold text-green-500 ">
+                          Typing...
+                        </span>
+                      ) : null}
                     </h4>
                     <span className="text-[10px]  text-slate-400  ml-2 flex-shrink-0">
                       {/* {conversation.lastMessage?.createdAt.to || "12:45 PM"} */}
@@ -239,17 +248,11 @@ const ChatList = ({
                   {/* text  */}
                   <div className="flex justify-between items-center mt-0.5">
                     <p className="text-[12px] text-slate-500 truncate ">
-                      {conversation.lastMessage?.text && conversation.lastMessage?.text.length > 10
-                        ? conversation.lastMessage.text.slice(0, 10) + "..."
+                      {conversation.lastMessage?.text &&
+                      conversation.lastMessage?.text.length > 20
+                        ? conversation.lastMessage.text.slice(0, 20) + "..."
                         : conversation.lastMessage?.text || "No messages yet"}
                     </p>
-
-                    {isTyping &&
-                    selectedConversation?._id === conversation._id ? (
-                      <span className="text-xs font-bold text-green-500 ">
-                        Typing...
-                      </span>
-                    ) : null}
 
                     {/* button 🔼  */}
                     <div className=" relative   ">
